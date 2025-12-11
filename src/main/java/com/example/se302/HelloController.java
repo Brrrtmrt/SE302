@@ -14,9 +14,8 @@ public class HelloController {
 
     @FXML
     protected void onHelloButtonClick() {
-        if(Validator.validateFile(Path.of("docs\\sampleData_AllClassroomsAndTheirCapacities.csv"))) {
+        if(Validator.validateFile(Path.of("docs\\sampleData_AllClassroomsAndTheirCapacities.csv")) && Validator.validateFile(Path.of("docs\\sampleData_AllAttendanceLists.csv")) && Validator.validateFile(Path.of("docs\\sampleData_AllCourses.csv")) && Validator.validateFile(Path.of("docs\\sampleData_AllStudents.csv"))) {
             welcomeText.setText("File is valid!");
-
         } else {
             welcomeText.setText("File is invalid!");
         }

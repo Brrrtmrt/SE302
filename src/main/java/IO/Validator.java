@@ -6,25 +6,35 @@ public class Validator {
     public static boolean validateFile(Path filePath) {
         //existence check
         if (Files.notExists(filePath)) {
-            throw new RuntimeException("File does not exist: " + filePath);
+            //ERROR LOG
+            System.out.println("File does not exist: " + filePath);
+            return false;
         }
         //readable check
         if (!Files.isReadable(filePath)) {
-            throw new RuntimeException("File is not readable: " + filePath);
+            //ERROR LOG
+            System.out.println("File is not readable: " + filePath);
+            return false;
         }
         //regular file check
         if (!Files.isRegularFile(filePath)) {
-            throw new RuntimeException("Not a regular file: " + filePath);
+            //ERROR LOG
+            System.out.println("Not a regular file: " + filePath);
+            return false;
         }
         //extansion check
         if (!allowedextensions(filePath)) {
-            throw new RuntimeException("File has an unsupported extension: " + filePath);
+            //ERROR LOG
+            System.out.println("File has an unsupported extension: " + filePath);
+            return false;
         }
         //reachable check
         try {
             Files.newBufferedReader(filePath).close();
         } catch (Exception e) {
-            throw new RuntimeException("File is not reachable: " + filePath);
+            //ERROR LOG
+            System.out.println("File is not reachable: " + filePath + " - " + e.getMessage());
+            return false;
         }
         //parseable check
         try (BufferedReader reader = Files.newBufferedReader(filePath)) {
@@ -32,21 +42,30 @@ public class Validator {
             String line;
             int lineNum = 1;
             while ((line = reader.readLine()) != null) {
+                // allow fully empty lines (skip them) so files with blank separators pass
+                if (line.trim().isEmpty()) {
+                    lineNum++;
+                    continue;
+                }
+
                 String[] columns = line.split(",", -1); // -1 keeps trailing empty fields
                 for (int coulmnNum = 0; coulmnNum < columns.length; coulmnNum++) {
                     String val = columns[coulmnNum];
                     if (val == null || val.trim().isEmpty() || "null".equalsIgnoreCase(val.trim()))  {
-         throw new RuntimeException(
-                "Empty or null value in file " + filePath + " at line " + lineNum + ", column " + (coulmnNum + 1));
+                      //ERROR LOG
+                        System.out.println("Empty or null value in file " + filePath + " at line " + lineNum + ", column " + (coulmnNum + 1));
+                        return false;
                     }
                 }
                 lineNum++;
             }
-
         } catch (RuntimeException re) {
-            throw re; // rethrow validation errors
+            System.out.println(re.getMessage());
+            return false;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to parse file: " + filePath, e);
+            //ERROR LOG
+            System.out.println("Failed to parse file: " + filePath + " - " + e.getMessage());
+            return false;
         }
         //all checks passed
         return true;
