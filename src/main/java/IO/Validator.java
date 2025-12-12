@@ -1,7 +1,9 @@
 package IO;
     import java.io.BufferedReader;
-    import java.nio.file.Files;
+import java.io.IOException;
+import java.nio.file.Files;
     import java.nio.file.Path;
+    import java.util.regex.Pattern;
 public class Validator {
     public static boolean validateFile(Path filePath) {
         //existence check
@@ -37,33 +39,40 @@ public class Validator {
             return false;
         }
         //parseable check
+        // detect separator by scanning until we find a line containing ',' or ';'
+        char separator = ','; // default
+        try (BufferedReader detectionReader = Files.newBufferedReader(filePath)) {
+            String detectLine;
+            while ((detectLine = detectionReader.readLine()) != null) {
+                if (detectLine.trim().isEmpty()) continue;
+                if (detectLine.indexOf(',') >= 0) { separator = ','; break; }
+                if (detectLine.indexOf(';') >= 0) { separator = ';'; break; }
+                // otherwise keep scanning until we find one of the delimiters
+            }
+        } catch (IOException e) {
+            System.out.println("Failed to detect separator for file: " + filePath + " - " + e.getMessage());
+            return false;
+        }
+
+        // now validate using the detected separator
+        String sepRegex = Pattern.quote(String.valueOf(separator));
         try (BufferedReader reader = Files.newBufferedReader(filePath)) {
-            // read each line and verify no empty/null cells
             String line;
             int lineNum = 1;
             while ((line = reader.readLine()) != null) {
-                // allow fully empty lines (skip them) so files with blank separators pass
-                if (line.trim().isEmpty()) {
-                    lineNum++;
-                    continue;
-                }
-
-                String[] columns = line.split(",", -1); // -1 keeps trailing empty fields
+                if (line.trim().isEmpty()) { lineNum++; continue; }
+                String[] columns = line.split(sepRegex, -1); // -1 keeps trailing empty fields
                 for (int coulmnNum = 0; coulmnNum < columns.length; coulmnNum++) {
                     String val = columns[coulmnNum];
                     if (val == null || val.trim().isEmpty() || "null".equalsIgnoreCase(val.trim()))  {
-                      //ERROR LOG
+                        //ERROR LOG
                         System.out.println("Empty or null value in file " + filePath + " at line " + lineNum + ", column " + (coulmnNum + 1));
                         return false;
                     }
                 }
                 lineNum++;
             }
-        } catch (RuntimeException re) {
-            System.out.println(re.getMessage());
-            return false;
-        } catch (Exception e) {
-            //ERROR LOG
+        } catch (IOException e) {
             System.out.println("Failed to parse file: " + filePath + " - " + e.getMessage());
             return false;
         }
