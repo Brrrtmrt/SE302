@@ -15,7 +15,23 @@ import java.util.Map;
 
 public class Importer {
 
-	
+	/**
+	 * Utility class for importing domain objects from simple CSV/text files
+	 * used by the project sample data. Methods intentionally print errors
+	 * and return empty collections on failure (caller should handle empties).
+	 *
+	 * Notes:
+	 * - Files are validated via `Validator.validateFile` before parsing.
+	 * - Student and Course IDs are extracted as digit sequences.
+	 */
+
+	/**
+	 * Read students from `filePath` and return a list of `Student` objects.
+	 * Expected input lines: a header or lines starting with `Std_ID_xxx`.
+	 * Example: "Std_ID_001"
+	 *
+	 * If validation fails or reading fails this returns an empty list.
+	 */
 	public static List<Student> importStudents(Path filePath) {
 		List<Student> students = new ArrayList<>();
 		if (!Validator.validateFile(filePath)) return students;
@@ -45,7 +61,10 @@ public class Importer {
 		return students;
 	}
 
-	
+	/**
+	 * Read course identifiers from `filePath` and return a list of `Course` objects.
+	 * Expected input lines: lines starting with `CourseCode_xxx`.
+	 */
 	public static List<Course> importCourses(Path filePath) {
 		List<Course> courses = new ArrayList<>();
 		if (!Validator.validateFile(filePath)) return courses;
@@ -66,7 +85,10 @@ public class Importer {
 		return courses;
 	}
 
-	
+	/**
+	 * Parse classroom definitions of the form `Classroom_01;40` and return
+	 * a list of `ClassRoom` objects. Non-numeric capacities are skipped.
+	 */
 	public static List<ClassRoom> importClassrooms(Path filePath) {
 		List<ClassRoom> classrooms = new ArrayList<>();
 		if (!Validator.validateFile(filePath)) return classrooms;
@@ -94,11 +116,31 @@ public class Importer {
 		return classrooms;
 	}
 
+	/**
+	 * Parse attendance lists. The file is expected to contain alternating
+	 * lines like `CourseCode_01` followed by a Python-style list of student
+	 * ids: `['Std_ID_001', 'Std_ID_002', ...]`.
+	 *
+	 * If `existingCourses` is provided, matching Course objects are reused
+	 * and their `enrolledStudentIDs` sets are populated. Otherwise new
+	 * Course objects are created and returned.
+	 */
+	/**
+	 * Backwards-compatible variant: preserves previous signature and delegates
+	 * to the student-aware importer (with null knownStudents).
+	 */
 	public static List<Course> importAttendanceLists(Path filePath, List<Course> existingCourses) {
 		return importAttendanceLists(filePath, existingCourses, null);
 	}
 
-	
+	/**
+	 * Import attendance lists while validating references.
+	 * - If `existingCourses` is provided, any CourseCode not present there
+	 *   will be reported to stdout and that attendance block will be skipped.
+	 * - If `knownStudents` is provided, any student id in an attendance list
+	 *   that does not match a `Student.getID()` will be reported to stdout
+	 *   and that student entry will be skipped for the course.
+	 */
 	public static List<Course> importAttendanceLists(Path filePath, List<Course> existingCourses, List<Student> knownStudents) {
 		Map<String, Course> courseById = new HashMap<>();
 		if (existingCourses != null) {
