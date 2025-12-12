@@ -54,6 +54,23 @@ public class Scheduler {
         }
 
         private boolean isGraphSafe(Course current, int proposedSlot) {
+                ArrayList<Course> neighbors = mp.get(current);
+
+                //      If no conflicts exist in the graph, it's safe
+                if (neighbors == null || neighbors.isEmpty()) return true;
+
+                for (Course neighbor : neighbors) {
+                        //      Check scheduled neighbors.
+                        if (schedule.containsKey(neighbor)) {
+                                int neighborSlot = schedule.get(neighbor);
+
+                                //      Constraint 1: No exact overlap
+                                if (proposedSlot == neighborSlot) return false;
+
+                                //      Constraint 2: Gap must be >= 2
+                                if (Math.abs(proposedSlot - neighborSlot) < 2) return false;
+                        }
+                }
                 return true;
         }
 
