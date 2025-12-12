@@ -138,7 +138,7 @@ public class Importer {
 	 * - If `existingCourses` is provided, any CourseCode not present there
 	 *   will be reported to stdout and that attendance block will be skipped.
 	 * - If `knownStudents` is provided, any student id in an attendance list
-	 *   that does not match a `Student.getID()` will be reported to stdout
+	*   that does not match a `Student.ID()` will be reported to stdout
 	 *   and that student entry will be skipped for the course.
 	 */
 	public static List<Course> importAttendanceLists(Path filePath, List<Course> existingCourses, List<Student> knownStudents) {
@@ -179,7 +179,7 @@ public class Importer {
 							if (knownStudents != null) {
 								try {
 									int sidInt = Integer.parseInt(sid);
-									boolean exists = knownStudents.stream().anyMatch(s -> s.getID() == sidInt);
+									boolean exists = knownStudents.stream().anyMatch(s -> s.ID() == sidInt);
 									if (!exists) {
 										System.out.println("Unknown student referenced in attendance file: " + sid + " for course " + currentCourseId + " (" + filePath + ")");
 										skipStudent = true;
