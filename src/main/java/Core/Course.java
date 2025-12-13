@@ -3,7 +3,7 @@ package Core;
 import java.util.HashSet;
 import java.util.Objects;
 
-class Course {
+public class Course {
         private final String ID;
 
         private HashSet<String> enrolledStudentIDs;
