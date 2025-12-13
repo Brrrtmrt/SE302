@@ -7,13 +7,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.List;
+
 
 
 
 public class Importer {
-    public static void importClassRooms(Path filePath){
-
+    public static ArrayList<ClassRoom> importClassRooms(Path filePath){
+        ArrayList<ClassRoom> classRooms = new ArrayList<>();
         String separator = new Importer().detectSeparator(filePath);
         
         try (BufferedReader reader = Files.newBufferedReader(filePath)) {
@@ -31,10 +31,12 @@ public class Importer {
         } catch (IOException e) {
             System.out.println("Error reading ClassRooms file: " + e.getMessage());
         }
+        return classRooms;
     }
 
 
-    public static void importStudents(Path filePath){
+    public static ArrayList<Student> importStudents(Path filePath){
+        ArrayList<Student> students = new ArrayList<>();
         try (BufferedReader reader = Files.newBufferedReader(filePath)) {
             reader.readLine(); // Skip header line
             String line;
@@ -45,13 +47,17 @@ public class Importer {
                    
                     Student student = new Student(line);
                     System.out.println("Imported Student with ID: " + student.ID());
+                    students.add(student);
                 }
             }
         } catch (IOException e) {
             System.out.println("Error reading Students file: " + e.getMessage());
+            
         }
+        return students ;
     }
-        public static void importCourses(Path filePath){
+        public static ArrayList<Course> importCourses(Path filePath){
+            ArrayList<Course> courses = new ArrayList<>();
            try (BufferedReader reader = Files.newBufferedReader(filePath)) {
                reader.readLine(); // Skip header line
                 String line;
@@ -62,13 +68,19 @@ public class Importer {
                    
                     Course course = new Course(line);
                     System.out.println("Imported Course with ID: " + course.getID());
+                    courses.add(course);
+                    
                 }
             }
+         
         } catch (IOException e) {
             System.out.println("Error reading Students file: " + e.getMessage());
+         
         }
+           return courses;
     }
-      public static void importAttandenceLists(Path filePath) {
+      public static ArrayList<Course> importAttandenceLists(Path filePath) {
+        ArrayList<Course> courses = new ArrayList<>();
     String separator = new Importer().detectSeparator(filePath);
 
     try (BufferedReader reader = Files.newBufferedReader(filePath)) {
@@ -107,16 +119,20 @@ public class Importer {
                 }
                 
                 System.out.println("Imported Attendance List for: " + course.getID() + " with Students: " + course.getEnrolledStudentIDs());
-                
+                courses.add(course);
             } else {
                 // --- Process Course ID ---
                 // If it's not a list, it must be the ID for the next batch
                 currentCourseID = line;
             }
+            
         }
+       
     } catch (IOException e) {
         System.out.println("Error reading Attendance file: " + e.getMessage());
+        
     }
+    return courses;
 }
 
 
