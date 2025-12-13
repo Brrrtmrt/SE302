@@ -1,7 +1,8 @@
 package Core;
 
-public record Student(int ID, String name) {
 
+public record Student(String ID) {
+       
         @Override
         public boolean equals(Object obj) {
                 if (obj instanceof Student s) {
@@ -11,9 +12,9 @@ public record Student(int ID, String name) {
         }
 
         
-        @Override
+    @Override
         public int hashCode() {
-                return Integer.hashCode(ID);
+                return ID.hashCode();
         }
 }
 
