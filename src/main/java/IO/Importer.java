@@ -72,7 +72,7 @@ public class Importer {
     String separator = new Importer().detectSeparator(filePath);
 
     try (BufferedReader reader = Files.newBufferedReader(filePath)) {
-        reader.readLine(); // Skip header line
+       // reader.readLine(); // Skip header line no header present 
 
         String line;
         String currentCourseID = null; // Holds the ID until the list is found
