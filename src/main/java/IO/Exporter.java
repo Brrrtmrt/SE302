@@ -23,7 +23,8 @@ public class Exporter {
         try (BufferedWriter writer = Files.newBufferedWriter(filePath)) {
 
             // HEADER
-            writer.write("ExamName,CourseID,ClassRoom,Date,Time,Students");
+            writer.write("ExamName,CourseID,ClassRoom,Date,StartTime,EndTime,Students");
+
             writer.newLine();
 
             for (var entry : schedule.entrySet()) {
@@ -31,7 +32,12 @@ public class Exporter {
                 int slot = entry.getValue();
 
                 String[] dateTime = slotMap.get(slot);
-                if (dateTime == null || dateTime.length < 2) continue;
+                if (dateTime == null || dateTime.length < 3) continue;
+
+                String date = dateTime[0];
+                String startTime = dateTime[1];
+                String endTime = dateTime[2];
+
 
                 ClassRoom room = roomMap.get(course);
                 if (room == null) continue;
@@ -44,10 +50,13 @@ public class Exporter {
                         examName + "," +
                                 course.getID() + "," +
                                 room.getName() + "," +
-                                dateTime[0] + "," +
-                                dateTime[1] + "," +
+                                date + "," +
+                                startTime + "," +
+                                endTime + "," +
                                 studentStr
                 );
+
+
                 writer.newLine();
             }
 
