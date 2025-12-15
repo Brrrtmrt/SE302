@@ -5,7 +5,10 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.layout.BorderPane?>
 
-<BorderPane fx:id="mainContainer" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.MainViewController">
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<BorderPane fx:id="mainContainer" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.MainViewController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>
@@ -25,4 +28,22 @@
         </menus>
       </MenuBar>
    </top>
+
+    <right>
+        <VBox prefWidth="250.0" spacing="10.0" style="-fx-padding: 10; -fx-background-color: #f4f4f4; -fx-border-color: #ccc; -fx-border-width: 0 0 0 1;">
+
+            <Label style="-fx-font-weight: bold;" text="All Students" />
+            <ListView fx:id="studentList" VBox.vgrow="ALWAYS" />
+
+            <Label style="-fx-font-weight: bold;" text="All Courses" />
+            <ListView fx:id="courseList" VBox.vgrow="ALWAYS" />
+
+            <Label style="-fx-font-weight: bold;" text="Classrooms &amp; Capacities" />
+            <ListView fx:id="classroomList" VBox.vgrow="ALWAYS" />
+
+            <Label style="-fx-font-weight: bold;" text="Attendance Lists" />
+            <ListView fx:id="attendanceList" VBox.vgrow="ALWAYS" />
+
+        </VBox>
+    </right>
 </BorderPane>
