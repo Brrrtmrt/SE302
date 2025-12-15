@@ -63,7 +63,7 @@ class Graph {
 
         public static void main(String[] args) {
                 //      Test
-                Course c1 = new Course("SE 323");
+                /*Course c1 = new Course("SE 323");
                 c1.addEnrolledStudentID("Mert Saadet");
                 c1.addEnrolledStudentID("Mert Utma");
 
@@ -82,6 +82,7 @@ class Graph {
                         System.out.println(x.getKey() + " conflicts with: " + x.getValue());
                 }
         }
-
+        */
+        }
 
 }
