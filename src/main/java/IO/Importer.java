@@ -153,10 +153,23 @@ public class Importer {
         }
 
         public static void main(String[] args) {
-                importClassRooms(Path.of("docs\\sampleData_AllClassroomsAndTheirCapacities.csv"));
-                importStudents(Path.of("docs\\sampleData_AllStudents.csv"));
-                importCourses(Path.of("docs\\sampleData_AllCourses.csv"));
-                importAttandenceLists(Path.of("docs\\sampleData_AllAttendanceLists.csv"));
+                
+                ArrayList<Course> courses2 = importCourses(Path.of("docs\\sampleData_AllCourses.csv"));
+                for (Course course : courses2) {
+                        System.out.println("Course ID: " + course.getID());
+                }
+                ArrayList<Student> students2 = importStudents(Path.of("docs\\sampleData_AllStudents.csv"));
+                for (Student student : students2) {
+                        System.out.println("Student ID: " + student.ID());
+                }
+                ArrayList<ClassRoom> classRooms2 = importClassRooms(Path.of("docs\\sampleData_AllClassroomsAndTheirCapacities.csv"));
+                for (ClassRoom classRoom : classRooms2) {
+                        System.out.println("ClassRoom Name: " + classRoom.getName() + ", Capacity: " + classRoom.getCapacity());
+                }
+                ArrayList<Course> courses3 = importAttandenceLists(Path.of("docs\\sampleData_AllAttendanceLists.csv"));
+                for (Course course : courses3) {
+                        System.out.println("Course ID: " + course.getID() + ", Enrolled Students: " + course.getEnrolledStudentIDs());
+                }
         }
 
 
