@@ -1,0 +1,39 @@
+.root {
+    -fx-base: #2b2b2b;
+    -fx-control-inner-background: #3c3f41;
+    -fx-background: #2b2b2b;
+    -fx-text-fill: white;
+}
+
+.label {
+    -fx-text-fill: white;
+}
+
+.list-cell {
+    -fx-text-fill: white;
+}
+
+.list-cell:even {
+    -fx-background-color: #3c3f41;
+}
+
+.list-cell:odd {
+    -fx-background-color: #3c3f41;
+}
+
+.list-cell:filled:selected:focused, .list-cell:filled:selected {
+    -fx-background-color: #0096C9;
+    -fx-text-fill: white;
+}
+
+/* Specific fix for Schedule View headers */
+.schedule-header {
+    -fx-background-color: #444;
+    -fx-text-fill: white;
+    -fx-border-color: #555;
+}
+
+.sidebar {
+    -fx-background-color: #2b2b2b; /* Dark background to match the theme */
+    -fx-border-color: #444;       /* Darker border */
+}

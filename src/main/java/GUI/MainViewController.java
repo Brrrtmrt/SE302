@@ -1,7 +1,9 @@
 package GUI;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -22,6 +24,9 @@ public class MainViewController implements Initializable {
     @FXML private ListView<String> courseList;
     @FXML private ListView<String> classroomList;
     @FXML private ListView<String> attendanceList;
+
+    // miscellaneous
+    private boolean isDarkModeOn = false;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -79,6 +84,21 @@ public class MainViewController implements Initializable {
                 label.setText(item);
                 setGraphic(hbox);
             }
+        }
+    }
+
+    @FXML
+    void handleDarkMode(ActionEvent event) {
+        isDarkModeOn = !isDarkModeOn;
+
+        Scene scene = mainContainer.getScene();
+
+        scene.getStylesheets().clear();
+
+        if (isDarkModeOn) {
+            scene.getStylesheets().add(getClass().getResource("/css/dark.css").toExternalForm());
+        } else {
+            scene.getStylesheets().add(getClass().getResource("/css/light.css").toExternalForm());
         }
     }
 }

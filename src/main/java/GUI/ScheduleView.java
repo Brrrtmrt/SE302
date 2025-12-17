@@ -54,9 +54,13 @@ public class ScheduleView extends GridPane {
 
     private Label createHeaderLabel(String text) {
         Label label = new Label(text);
-        label.setMaxWidth(Double.MAX_VALUE);
+        label.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         label.setAlignment(Pos.CENTER);
-        label.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; -fx-padding: 5;");
+        label.setStyle("-fx-font-weight: bold;");
+
+        // to make dark mode
+        label.getStyleClass().add("schedule-header");
+
         return label;
     }
 
