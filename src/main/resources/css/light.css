@@ -1,0 +1,14 @@
+.root {
+    -fx-base: #f4f4f4;
+    -fx-control-inner-background: white;
+    -fx-text-fill: black;
+}
+
+.schedule-header {
+    -fx-background-color: #e0e0e0;
+    -fx-text-fill: black;
+}
+
+.sidebar {
+    -fx-background-color: #f4f4f4; /* Keep the original light gray */
+}
