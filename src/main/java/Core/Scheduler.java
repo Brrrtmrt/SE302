@@ -7,7 +7,9 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 
 
 public class Scheduler {
@@ -123,8 +125,8 @@ public class Scheduler {
 
                         //      Commented out because infinite loop(not implemented yet)->Tolga
 
-                        //if (!checkRoomCapacity(curr, slot)) continue;
-                        //if (!checkMaxStudentsPerDay(curr, slot)) continue;
+                        if (!checkRoomCapacity(curr, slot)) continue;
+                        if (!checkMaxStudentsPerDay(curr, slot)) continue;
 
                         //      Assign the slot
                         schedule.put(curr, slot);
@@ -175,13 +177,66 @@ public class Scheduler {
         }
 
         boolean checkRoomCapacity(Course course, int slot) {
+                // get the number of students in the course
+                int studentCount = course.getEnrolledStudentIDs().size();
 
-                return false;
+                // how many courses are already assigned to this slot
+                int occupiedRoomsInSlot = 0;
+                for (var entry : schedule.entrySet()) {
+                        if (entry.getValue() == slot) {
+                                occupiedRoomsInSlot++;
+                        }
+                }
+
+                // get all available classrooms and sort them by capacity (Ascending)
+                ArrayList<ClassRoom> sortedRooms = new ArrayList<>(this.classrooms);
+                sortedRooms.sort(Comparator.comparingInt(ClassRoom::getCapacity));
+
+                // if n rooms are taken, we look for the next available room that can fit our student count
+                int availableRoomIndex = sortedRooms.size() - 1 - occupiedRoomsInSlot;
+
+                if (availableRoomIndex < 0) {
+                        return false; // no physical rooms left
+                }
+
+                // check if the room at this index can hold the students
+                return sortedRooms.get(availableRoomIndex).getCapacity() >= studentCount;
+
         }
 
         boolean checkMaxStudentsPerDay(Course course, int slot) {
+                // get the date of the slot
+                LocalDate targetDate = active_timeslots.get(slot).getDate();
 
-                return false;
+                // get the list of students in the current course
+                HashSet<String> studentsInCurrentCourse = course.getEnrolledStudentIDs();
+
+                // check each student's daily load
+                for (String studentID : studentsInCurrentCourse) {
+                        int examsToday = 0;
+
+                        // look at all courses already scheduled
+                        for (var entry : schedule.entrySet()) {
+                                Course scheduledCourse = entry.getKey();
+                                int scheduledSlotIdx = entry.getValue();
+                                LocalDate scheduledDate = active_timeslots.get(scheduledSlotIdx).getDate();
+
+                                // if the scheduled course is on the same day
+                                if (scheduledDate.equals(targetDate)) {
+                                        // check if this student is in the scheduled course
+                                        if (scheduledCourse.getEnrolledStudentIDs().contains(studentID)) {
+                                                examsToday++;
+                                        }
+                                }
+                        }
+
+                        // if this student already has 2 exams on this date, we cannot add another
+                        if (examsToday >= 2) {
+                                return false;
+                        }
+                }
+
+                return true; // all students have 0 or 1 exams so far today
         }
 
         public static void main(String[] args) {
