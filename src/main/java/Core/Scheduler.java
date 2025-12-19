@@ -1,15 +1,14 @@
 package Core;
 
-import Helpers.TimeSlot;
-import IO.Importer;
-
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+
+import Helpers.TimeSlot;
+import IO.Importer;
 
 
 public class Scheduler {
@@ -275,9 +274,9 @@ public class Scheduler {
 
                 Scheduler scheduler = new Scheduler();
                 //      These should work without absolute paths FIX IT.
-                Path croom = Path.of("E:\\SE302\\docs\\sampleData_AllClassroomsAndTheirCapacities.csv");
-                Path cour = Path.of("E:\\SE302\\docs\\sampleData_AllCourses.csv");
-                Path att = Path.of("E:\\SE302\\docs\\sampleData_AllAttendanceLists.csv");
+                Path croom = Path.of("docs\\sampleData_AllClassroomsAndTheirCapacities.csv");
+                Path cour = Path.of("docs\\sampleData_AllCourses.csv");
+                Path att = Path.of("docs\\sampleData_AllAttendanceLists.csv");
                 scheduler.init(croom, cour, att);
                 scheduler.generate_schedule(false);
 

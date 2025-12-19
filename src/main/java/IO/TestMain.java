@@ -1,22 +1,22 @@
 package IO;
 
-import Core.ClassRoom;
-import Core.Course;
-
 import java.nio.file.Path;
 import java.util.HashMap;
+
+import Core.ClassRoom;
+import Core.Course;
 
 public class TestMain {
 
     public static void main(String[] args) {
 
         // --- Courses ---
-        Course ce323 = new Course("CE 323");
+        Course ce323 = new Course("CE 323",90);
         ce323.addEnrolledStudentID("S1");
         ce323.addEnrolledStudentID("S2");
         ce323.addEnrolledStudentID("S3");
 
-        Course se323 = new Course("SE 323");
+        Course se323 = new Course("SE 323",80);
         se323.addEnrolledStudentID("S2");
         se323.addEnrolledStudentID("S4");
 
