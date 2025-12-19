@@ -1,21 +1,34 @@
 package Helpers;
 
-import Core.Course;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.List;
+
 
 public class TimeSlot {
         private int m_id;            // Integer used on solver 0,1,2,.....n
         private LocalDate m_date;    //    2026-01-01
         private LocalTime m_time;    //    09:00
 
+        private static int step_size_t;
+
         public TimeSlot(int id, LocalDate date, LocalTime time) {
                 this.m_id = id;
                 this.m_date = date;
                 this.m_time = time;
+        }
+
+        public static int getStep_size_t() {
+                return step_size_t;
+        }
+
+        public static void setStep_size_t(int step_size) {
+                if (step_size < 0) {
+                        System.err.println("Error: Step size must be a positive integer.");
+                        TimeSlot.step_size_t = 55;
+                }
+                TimeSlot.step_size_t = step_size;
         }
 
         @Override
@@ -42,7 +55,7 @@ public class TimeSlot {
          * @return slots that will be used in scheduler
          *
          */
-        public static ArrayList<LocalTime> set_time_slots() {
+       /* public static ArrayList<LocalTime> set_time_slots() {
 
                 return new ArrayList<>(List.of(
                         LocalTime.of(8, 30),
@@ -53,6 +66,22 @@ public class TimeSlot {
                         LocalTime.of(17, 40),
                         LocalTime.of(19, 30)
                 ));
+        }*/
+        public static ArrayList<LocalTime> set_time_slots() {
+                if (step_size_t <= 0) {
+                        throw new IllegalArgumentException("step_size_t must be > 0");
+                }
+
+                ArrayList<LocalTime> times = new ArrayList<>();
+
+                LocalTime start = LocalTime.of(8, 30);
+                LocalTime end = LocalTime.of(19, 00);
+
+                while (!start.isAfter(end)) {
+                        times.add(start);
+                        start = start.plusMinutes(step_size_t); // Step size (Resolution)
+                }
+                return times;
         }
 
         public static ArrayList<TimeSlot> slot_generator(int num_days, LocalDate start_date, ArrayList<LocalTime> time_slots, boolean skip_weekend) {
