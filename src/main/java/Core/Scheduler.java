@@ -1,5 +1,6 @@
 package Core;
 
+
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -42,9 +43,10 @@ public class Scheduler {
 
         private ArrayList<TimeSlot> active_timeslots;
 
-        public void init(Path classroom, Path cour_path, Path attendance_path) {
+        public void init(Path classroom, Path cour_path, Path attendance_path, int stepsize) {
                 this.courses = Importer.importCourses(cour_path);
                 this.attendance_list = Importer.importAttandenceLists(attendance_path);
+                TimeSlot.setStep_size_t(stepsize);
                 this.slotIds = TimeSlot.set_time_slots();
                 //      slots are init on generate_schedule
                 //      schedule is created on generate_schedule
@@ -100,6 +102,15 @@ public class Scheduler {
                                 this.slots.add(ts.getID());
                         }
                         this.exams_per_slot = new int[slots.size()];
+                        int totalSystemCapacity = this.slots.size() * this.total_rooms;
+
+
+                        if (this.courses.size() > totalSystemCapacity) {
+                                System.out.println("Impossible: Trying to fit " + this.courses.size() +
+                                        " courses into " + totalSystemCapacity + " total slots.");
+                                days++;
+                                continue; // Skip the solver entirely and try the next day
+                        }
 
                         if (solver(0)) {
                                 solved = true;
@@ -110,7 +121,7 @@ public class Scheduler {
                                         TimeSlot rt = curr.get(slot_id);
                                         //      day will not change, no exam on (e.g.23.00) can change later
                                         LocalTime start = rt.getTime();
-                                        LocalTime end = start.plusMinutes(100);
+                                        LocalTime end = start.plusMinutes(TimeSlot.getStep_size_t());
                                         System.out.println(entry.getKey().getID() + " -> " + rt + " " + "ends at: " + end);
                                 }
                                 return;
@@ -118,6 +129,7 @@ public class Scheduler {
                                 schedule.clear();
                                 days++;
                         }
+
                 }
 
 
@@ -139,16 +151,19 @@ public class Scheduler {
                         if (!isGraphSafe(curr, slot)) {
                                 continue;
                         }
-                        if (exams_per_slot[i] >= total_rooms) {
+                        if (!checkRoomCapacity(curr, slot)) {
                                 continue;
                         }
 
-                        //      Check constraints (capacity, std per day)
 
-                        //      Commented out because infinite loop(not implemented yet)->Tolga
+                        if (!checkStudentConflicts(curr, slot)) {
+                                continue;
+                        }
 
-                        if (!checkRoomCapacity(curr, slot)) continue;
-                        if (!checkMaxStudentsPerDay(curr, slot)) continue;
+
+                        if (!checkMaxStudentsPerDay(curr, slot)) {
+                                continue;
+                        }
 
                         //      Assign the slot
                         schedule.put(curr, slot);
@@ -169,6 +184,7 @@ public class Scheduler {
 
         }
 
+        @Deprecated
         private boolean isGraphSafe(Course current, int proposedSlot) {
                 ArrayList<Course> neighbors = mp.get(current);
 
@@ -197,6 +213,36 @@ public class Scheduler {
                 }
                 return true;
         }
+
+        private boolean checkStudentConflicts(Course current, int proposedSlotId) {
+
+                ArrayList<Course> neighbors = mp.get(current);
+
+
+                if (neighbors == null || neighbors.isEmpty()) return true;
+
+
+                TimeSlot propStart = active_timeslots.get(proposedSlotId);
+                int propDur = current.getDuration();
+
+
+                for (Course neighbor : neighbors) {
+                        if (schedule.containsKey(neighbor)) {
+
+
+                                int neighborSlotId = schedule.get(neighbor);
+                                TimeSlot neighborStart = active_timeslots.get(neighborSlotId);
+                                int neighborDur = neighbor.getDuration();
+
+
+                                if (isTimeOverlap(propStart, propDur, neighborStart, neighborDur)) {
+                                        return false;
+                                }
+                        }
+                }
+                return true;
+        }
+
 
         boolean checkRoomCapacity(Course course, int slot) {
 
@@ -270,14 +316,30 @@ public class Scheduler {
                 return true; // all students have 0 or 1 exams so far today
         }
 
+        private boolean isTimeOverlap(TimeSlot slotA, int durationA, TimeSlot slotB, int durationB) {
+
+                if (!slotA.getDate().equals(slotB.getDate())) {
+                        return false;
+                }
+
+
+                LocalTime startA = slotA.getTime();
+                LocalTime endA = startA.plusMinutes(durationA).plusMinutes(TimeSlot.getStep_size_t());
+
+                LocalTime startB = slotB.getTime();
+                LocalTime endB = startB.plusMinutes(TimeSlot.getStep_size_t());
+
+                return startA.isBefore(endB) && startB.isBefore(endA);
+        }
+
         public static void main(String[] args) {
 
                 Scheduler scheduler = new Scheduler();
                 //      These should work without absolute paths FIX IT.
                 Path croom = Path.of("docs\\sampleData_AllClassroomsAndTheirCapacities.csv");
-                Path cour = Path.of("docs\\sampleData_AllCourses.csv");
+                Path cour = Path.of("docs\\sampleData_AllCoursesWithTime.csv");
                 Path att = Path.of("docs\\sampleData_AllAttendanceLists.csv");
-                scheduler.init(croom, cour, att);
+                scheduler.init(croom, cour, att, 55);
                 scheduler.generate_schedule(false);
 
                 /*      This is tested, output may look abnormal
