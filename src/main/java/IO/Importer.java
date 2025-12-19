@@ -25,6 +25,7 @@ public class Importer {
                                         String name = parts[0].trim();
                                         int capacity = Integer.parseInt(parts[1].trim());
                                         ClassRoom classRoom = new ClassRoom(name, capacity);
+                                        classRooms.add(classRoom);
                                         System.out.println("Imported ClassRoom: " + classRoom.getName() + " with capacity " + classRoom.getCapacity());
                                 }
                         }

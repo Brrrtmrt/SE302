@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckMenuItem?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
@@ -9,17 +10,17 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 
-<?import javafx.scene.control.Button?>
-<BorderPane fx:id="mainContainer" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.MainViewController">
+<BorderPane fx:id="mainContainer" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.MainViewController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>
           <Menu mnemonicParsing="false" text="File">
             <items>
-                  <MenuItem mnemonicParsing="false" text="Import Stduent" />
-              <MenuItem mnemonicParsing="false" text="Import Course" />
-                  <MenuItem mnemonicParsing="false" text="Import Classroom-Capacty" />
-                  <MenuItem mnemonicParsing="false" text="Import Attendence List" />
+                  <MenuItem mnemonicParsing="false" onAction="#importStudents" text="Import Stduent" />
+              <MenuItem mnemonicParsing="false" onAction="#importCourses" text="Import Course" />
+                  <MenuItem mnemonicParsing="false" onAction="#importClassroomCapacity" text="Import Classroom-Capacty" />
+                  <MenuItem mnemonicParsing="false" onAction="#importAttendanceList" text="Import Attendence List" />
+                  <MenuItem mnemonicParsing="false" onAction="#exportTimetable" text="Export The TimeTable" />
             </items>
           </Menu>
           <Menu mnemonicParsing="false" text="Edit">
@@ -32,7 +33,7 @@
    </top>
 
     <right>
-        <VBox styleClass="sidebar" prefWidth="250.0" spacing="10.0" style="-fx-padding: 10; -fx-border-color: #ccc; -fx-border-width: 0 0 0 1;">
+        <VBox prefWidth="250.0" spacing="10.0" style="-fx-padding: 10; -fx-border-color: #ccc; -fx-border-width: 0 0 0 1;" styleClass="sidebar">
 
             <Label style="-fx-font-weight: bold;" text="All Students" />
             <ListView fx:id="studentList" VBox.vgrow="ALWAYS" />
@@ -46,10 +47,7 @@
             <Label style="-fx-font-weight: bold;" text="Attendance Lists" />
             <ListView fx:id="attendanceList" VBox.vgrow="ALWAYS" />
 
-            <Button text="Create Optimal Schedule"
-                    onAction="#handleCreateSchedule"
-                    maxWidth="Infinity"
-                    style="-fx-base: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" />
+            <Button maxWidth="Infinity" onAction="#handleCreateSchedule" style="-fx-base: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" text="Create Optimal Schedule" />
 
         </VBox>
     </right>
