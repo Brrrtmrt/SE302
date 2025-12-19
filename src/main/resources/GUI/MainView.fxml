@@ -9,7 +9,8 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane fx:id="mainContainer" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.MainViewController">
+<?import javafx.scene.control.Button?>
+<BorderPane fx:id="mainContainer" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.MainViewController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>
@@ -44,6 +45,11 @@
 
             <Label style="-fx-font-weight: bold;" text="Attendance Lists" />
             <ListView fx:id="attendanceList" VBox.vgrow="ALWAYS" />
+
+            <Button text="Create Optimal Schedule"
+                    onAction="#handleCreateSchedule"
+                    maxWidth="Infinity"
+                    style="-fx-base: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" />
 
         </VBox>
     </right>
