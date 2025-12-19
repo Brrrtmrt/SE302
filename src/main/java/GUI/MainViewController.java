@@ -1,6 +1,7 @@
 package GUI;
 
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
@@ -85,6 +86,11 @@ public class MainViewController implements Initializable {
                 setGraphic(hbox);
             }
         }
+    }
+
+    @FXML
+    void handleCreateSchedule(ActionEvent event) {
+        System.out.println("DEBUG: create the optimal schedule button pressed");
     }
 
     @FXML
