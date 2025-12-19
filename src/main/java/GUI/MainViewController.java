@@ -3,6 +3,7 @@ package GUI;
 import Core.ClassRoom;
 import Core.Course;
 import Core.Student;
+import IO.Exporter;
 import IO.Importer;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -21,6 +22,7 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.ResourceBundle;
 
 public class MainViewController implements Initializable {
@@ -28,20 +30,34 @@ public class MainViewController implements Initializable {
     @FXML
     private BorderPane mainContainer;
 
-    //connection to the fxml items
+    // ONLY VISUALS
     @FXML private ListView<String> studentList;
     @FXML private ListView<String> courseList;
     @FXML private ListView<String> classroomList;
     @FXML private ListView<String> attendanceList;
 
+    //DATA PART
+    private ArrayList<Student> allStudents = new ArrayList<>();
+    private ArrayList<Course> allCourses = new ArrayList<>();
+    private ArrayList<ClassRoom> allClassrooms = new ArrayList<>();
+
     // miscellaneous
     private boolean isDarkModeOn = false;
+    private ScheduleView scheduleView;
+
+    //related to export
+    private HashMap<Course, Integer> finalSchedule = new HashMap<>();
+    private HashMap<Integer, String[]> finalSlotMap = new HashMap<>();
+    private HashMap<Course, ClassRoom> finalRoomMap = new HashMap<>();
+
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         //preparing the schedule view
-        ScheduleView schedule = new ScheduleView();
-        schedule.addLesson("Java Lab", 0, 0, Color.LIGHTBLUE);
+        scheduleView = new ScheduleView();
+
+        scheduleView.addLesson("HERAHNGI BI DERS", 0, 0, Color.GRAY);
         /*   I think we don't need this comment but i'm not sure so don't delete yet
         StackPane.setAlignment(schedule, javafx.geometry.Pos.CENTER);
         schedule.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
@@ -57,7 +73,7 @@ public class MainViewController implements Initializable {
         classroomList.setCellFactory(param -> new DeletableCell());
         attendanceList.setCellFactory(param -> new DeletableCell());
 
-        mainContainer.setCenter(schedule); //the timetable
+        mainContainer.setCenter(scheduleView); //the timetable
     }
 
     @FXML
@@ -65,6 +81,8 @@ public class MainViewController implements Initializable {
         File file = browseFile("Select Students CSV");
         if (file != null) {
             ArrayList<Student> students = Importer.importStudents(file.toPath());
+
+            this.allStudents = students; //SAVING
 
             studentList.getItems().clear();
             for (Student s : students) {
@@ -78,6 +96,9 @@ public class MainViewController implements Initializable {
         File file = browseFile("Select Courses CSV");
         if (file != null) {
             ArrayList<Course> courses = Importer.importCourses(file.toPath());
+
+            this.allCourses = courses;
+
             courseList.getItems().clear();
             for (Course c : courses) {
                 courseList.getItems().add(c.getID());
@@ -90,6 +111,9 @@ public class MainViewController implements Initializable {
         File file = browseFile("Select Classrooms CSV");
         if (file != null) {
             ArrayList<ClassRoom> rooms = Importer.importClassRooms(file.toPath());
+
+            this.allClassrooms = rooms;
+
             classroomList.getItems().clear();
             for (ClassRoom r : rooms) {
                 classroomList.getItems().add(r.getName() + " (Cap: " + r.getCapacity() + ")");
@@ -110,9 +134,38 @@ public class MainViewController implements Initializable {
         }
     }
 
+    // WHEN THE USER PRESSES EXPORT THE FILE
     @FXML
-    void exportTimetable(ActionEvent event){
+    void exportTimetable(ActionEvent event) {
+        // check
+        if (finalSchedule.isEmpty()) {
+            System.out.println("Error: No schedule generated yet. Please create a schedule first.");
+            return;
+        }
 
+        // file chooser
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Schedule");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+        fileChooser.setInitialFileName("OptimalSchedule.csv");
+
+        //another check
+        if (mainContainer.getScene() != null) {
+            Stage stage = (Stage) mainContainer.getScene().getWindow();
+            File file = fileChooser.showSaveDialog(stage);
+
+            // 4. call exporter
+            if (file != null) {
+                Exporter.exportSchedule(
+                        file.toPath(),
+                        "Final Exams 2025",
+                        finalSchedule,
+                        finalSlotMap,
+                        finalRoomMap
+                );
+                System.out.println("Export Successful to: " + file.getAbsolutePath());
+            }
+        }
     }
 
     private File browseFile(String title) {
@@ -126,7 +179,7 @@ public class MainViewController implements Initializable {
 
 
     //helper class
-    static class DeletableCell extends ListCell<String> {
+    class DeletableCell extends ListCell<String> {
         HBox hbox = new HBox();
         Label label = new Label("");
         Pane pane = new Pane();
@@ -135,16 +188,37 @@ public class MainViewController implements Initializable {
         public DeletableCell() {
             super();
 
-            // configure how it looks
             hbox.getChildren().addAll(label, pane, button);
             HBox.setHgrow(pane, Priority.ALWAYS);
-
-
             button.setStyle("-fx-text-fill: red; -fx-font-weight: bold; -fx-background-color: transparent; -fx-cursor: hand;");
 
-            // THE DELETE ACTION WE'LL ADD MORE HERE
             button.setOnAction(event -> {
-                getListView().getItems().remove(getItem());
+                String itemToRemove = getItem();
+
+                // remove from the ui
+                getListView().getItems().remove(itemToRemove);
+
+                // remove from the actual data
+                if (getListView() == courseList) {
+
+                    allCourses.removeIf(c -> c.getID().equals(itemToRemove));
+                    System.out.println("Deleted Course: " + itemToRemove);
+
+                } else if (getListView() == studentList) {
+
+                    allStudents.removeIf(s -> s.ID().equals(itemToRemove));
+                    System.out.println("Deleted Student: " + itemToRemove);
+
+                } else if (getListView() == classroomList) {
+
+                    allClassrooms.removeIf(r ->
+                            (r.getName() + " (Cap: " + r.getCapacity() + ")").equals(itemToRemove)
+                    );
+                    System.out.println("Deleted Room: " + itemToRemove);
+
+                } else if (getListView() == attendanceList) {
+
+                }
             });
         }
 
@@ -153,7 +227,6 @@ public class MainViewController implements Initializable {
             super.updateItem(item, empty);
             setText(null);
             setGraphic(null);
-
             if (item != null && !empty) {
                 label.setText(item);
                 setGraphic(hbox);
@@ -161,9 +234,59 @@ public class MainViewController implements Initializable {
         }
     }
 
+    //WHEN THE USER PRESSES CREATE THE MOST OPTIMAL TIMETABLE(SCHEDULE)
     @FXML
     void handleCreateSchedule(ActionEvent event) {
-        System.out.println("DEBUG: create the optimal schedule button pressed");
+        // check
+        if (allCourses.isEmpty() || allClassrooms.isEmpty()) {
+            System.out.println("Error: Please import Courses and Classrooms first!");
+            return;
+        }
+
+        System.out.println("Generating Schedule...");
+
+        // clear old data
+        finalSchedule.clear();
+        finalSlotMap.clear();
+        finalRoomMap.clear();
+
+        scheduleView.clearLessons();
+
+        // algorithm
+        int dayIndex = 0;
+        int timeIndex = 0;
+
+        for (Course course : allCourses) {
+            // logic
+            int slotID = (dayIndex * 10) + timeIndex;
+
+            // VERY IMPORTANT SAVING TO THE MEMORY
+            finalSchedule.put(course, slotID);
+
+            if (!allClassrooms.isEmpty()) {
+                finalRoomMap.put(course, allClassrooms.get(0));
+            }
+
+            String timeString = String.format("%02d:30", 8 + timeIndex);
+            finalSlotMap.put(slotID, new String[]{"2025-06-15", timeString, "10:30"});
+
+            // VISUAL DISPLAY
+            scheduleView.addLesson(
+                    course.getID(),
+                    dayIndex,
+                    timeIndex,
+                    Color.LIGHTBLUE
+            );
+
+            timeIndex++;
+            if (timeIndex > 6) {
+                timeIndex = 0;
+                dayIndex++;
+            }
+            if (dayIndex > 4) dayIndex = 0;
+        }
+
+        System.out.println("Schedule Generated. Ready to Export.");
     }
 
     @FXML
