@@ -1,5 +1,9 @@
 package GUI;
 
+import Core.ClassRoom;
+import Core.Course;
+import Core.Student;
+import IO.Importer;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -11,8 +15,12 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
+import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.ResourceBundle;
 
 public class MainViewController implements Initializable {
@@ -51,6 +59,71 @@ public class MainViewController implements Initializable {
 
         mainContainer.setCenter(schedule); //the timetable
     }
+
+    @FXML
+    void importStudents(ActionEvent event){
+        File file = browseFile("Select Students CSV");
+        if (file != null) {
+            ArrayList<Student> students = Importer.importStudents(file.toPath());
+
+            studentList.getItems().clear();
+            for (Student s : students) {
+                studentList.getItems().add(s.ID());
+            }
+        }
+    }
+
+    @FXML
+    void importCourses(ActionEvent event){
+        File file = browseFile("Select Courses CSV");
+        if (file != null) {
+            ArrayList<Course> courses = Importer.importCourses(file.toPath());
+            courseList.getItems().clear();
+            for (Course c : courses) {
+                courseList.getItems().add(c.getID());
+            }
+        }
+    }
+
+    @FXML
+    void importClassroomCapacity(ActionEvent event){
+        File file = browseFile("Select Classrooms CSV");
+        if (file != null) {
+            ArrayList<ClassRoom> rooms = Importer.importClassRooms(file.toPath());
+            classroomList.getItems().clear();
+            for (ClassRoom r : rooms) {
+                classroomList.getItems().add(r.getName() + " (Cap: " + r.getCapacity() + ")");
+            }
+        }
+    }
+
+    @FXML
+    void importAttendanceList(ActionEvent event){
+        File file = browseFile("Select Attendance CSV");
+        if (file != null) {
+            ArrayList<Course> attendanceData = Importer.importAttandenceLists(file.toPath());
+            attendanceList.getItems().clear();
+            for (Course c : attendanceData) {
+                int count = c.getEnrolledStudentIDs().size();
+                attendanceList.getItems().add(c.getID() + ": " + count + " Students");
+            }
+        }
+    }
+
+    @FXML
+    void exportTimetable(ActionEvent event){
+
+    }
+
+    private File browseFile(String title) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle(title);
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+
+        Stage stage = (Stage) mainContainer.getScene().getWindow();
+        return fileChooser.showOpenDialog(stage);
+    }
+
 
     //helper class
     static class DeletableCell extends ListCell<String> {
