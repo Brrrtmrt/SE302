@@ -1,15 +1,14 @@
 package Core;
 
-import Helpers.TimeSlot;
-import IO.Importer;
-
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+
+import Helpers.TimeSlot;
+import IO.Importer;
 
 
 public class Scheduler {

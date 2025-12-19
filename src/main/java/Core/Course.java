@@ -5,11 +5,14 @@ import java.util.Objects;
 
 public class Course {
         private final String ID;
+        private final int duration ;
 
         private HashSet<String> enrolledStudentIDs;
 
-        public Course(String ID) {
+
+        public Course(String ID, int duration) {
                 this.ID = ID;
+                this.duration = duration;
                 this.enrolledStudentIDs = new HashSet<>();
         }
 
@@ -20,7 +23,9 @@ public class Course {
         public String getID() {
                 return ID;
         }
-
+        public int getDuration() {
+                return duration;
+        }
         public final HashSet<String> getEnrolledStudentIDs() {
                 return this.enrolledStudentIDs;
         }

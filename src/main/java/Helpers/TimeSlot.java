@@ -44,13 +44,19 @@ public class TimeSlot {
          */
         public static ArrayList<LocalTime> set_time_slots() {
 
-                return new ArrayList<>(List.of(
+                return new ArrayList<LocalTime>(List.of(
                         LocalTime.of(8, 30),
+                        LocalTime.of(9,25),
                         LocalTime.of(10, 20),
+                        LocalTime.of(11, 15),
                         LocalTime.of(12, 10),
+                        LocalTime.of(13, 5),
                         LocalTime.of(14, 0),
+                        LocalTime.of(14, 55),
                         LocalTime.of(15, 50),
+                        LocalTime.of(16, 45),
                         LocalTime.of(17, 40),
+                        LocalTime.of(18, 35),
                         LocalTime.of(19, 30)
                 ));
         }
