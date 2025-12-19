@@ -49,7 +49,14 @@ public class ScheduleView extends GridPane {
         lbl.setStyle("-fx-font-weight: bold;");
         lessonPane.getChildren().add(lbl);
 
+        lessonPane.setUserData("lesson");
+
         this.add(lessonPane, dayIndex + 1, timeIndex + 1);
+    }
+
+    public void clearLessons() {
+        // This removes only the nodes we tagged as "lesson"
+        getChildren().removeIf(node -> "lesson".equals(node.getUserData()));
     }
 
     private Label createHeaderLabel(String text) {
