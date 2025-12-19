@@ -51,12 +51,35 @@ public class Scheduler {
                 //      schedule is created on generate_schedule
                 this.mp = Graph.createGraph(attendance_list);
 
-                //this.classrooms = Importer.importClassRooms(classroom);
-                // this.total_rooms = this.classrooms.size();
-                this.total_rooms = 10;
+                this.classrooms = Importer.importClassRooms(classroom);
+                this.total_rooms = this.classrooms.size();
         }
 
         public void generate_schedule(boolean skip_weekend) {
+                this.courses.sort((c1, c2) -> Integer.compare(c2.getEnrolledStudentIDs().size(), c1.getEnrolledStudentIDs().size()));
+
+
+                int maxRoomCapacity = 0;
+                if (this.classrooms != null && !this.classrooms.isEmpty()) {
+                        maxRoomCapacity = this.classrooms.stream()
+                                .mapToInt(ClassRoom::getCapacity)
+                                .max()
+                                .orElse(0);
+                } else {
+                        System.err.println("Error: No classrooms initialized. Cannot schedule.");
+                        return;
+                }
+
+
+                for (Course c : this.courses) {
+                        int enrolled = c.getEnrolledStudentIDs().size();
+                        if (enrolled > maxRoomCapacity) {
+                                System.err.println("CRITICAL ERROR: Course " + c.getID() +
+                                        " has " + enrolled + " students, but the largest room only holds " + maxRoomCapacity + ".");
+                                System.err.println("Stopping to prevent infinite loop.");
+                                return;
+                        }
+                }
                 int days = 1;
                 boolean solved = false;
                 this.schedule = new HashMap<>();
@@ -177,31 +200,40 @@ public class Scheduler {
         }
 
         boolean checkRoomCapacity(Course course, int slot) {
-                // get the number of students in the course
-                int studentCount = course.getEnrolledStudentIDs().size();
 
-                // how many courses are already assigned to this slot
-                int occupiedRoomsInSlot = 0;
+                ArrayList<Course> coursesInSlot = new ArrayList<>();
+                coursesInSlot.add(course);
+
                 for (var entry : schedule.entrySet()) {
                         if (entry.getValue() == slot) {
-                                occupiedRoomsInSlot++;
+                                coursesInSlot.add(entry.getKey());
                         }
                 }
 
-                // get all available classrooms and sort them by capacity (Ascending)
-                ArrayList<ClassRoom> sortedRooms = new ArrayList<>(this.classrooms);
-                sortedRooms.sort(Comparator.comparingInt(ClassRoom::getCapacity));
-
-                // if n rooms are taken, we look for the next available room that can fit our student count
-                int availableRoomIndex = sortedRooms.size() - 1 - occupiedRoomsInSlot;
-
-                if (availableRoomIndex < 0) {
-                        return false; // no physical rooms left
+                if (coursesInSlot.size() > this.classrooms.size()) {
+                        return false;
                 }
 
-                // check if the room at this index can hold the students
-                return sortedRooms.get(availableRoomIndex).getCapacity() >= studentCount;
+                //      Sort everything Descending (Biggest course -> Biggest room)
+                //      Sort courses by # of students
+                coursesInSlot.sort((c1, c2) -> Integer.compare(c2.getEnrolledStudentIDs().size(), c1.getEnrolledStudentIDs().size()));
 
+                //      Sort classrooms by capacity
+                ArrayList<ClassRoom> roomsDesc = new ArrayList<>(this.classrooms);
+                roomsDesc.sort((r1, r2) -> Integer.compare(r2.getCapacity(), r1.getCapacity()));
+
+                //      Verify that every course fits in its assigned room
+                //      (Biggest course goes to biggest room, 2nd biggest to 2nd biggest, etc.)
+                for (int i = 0; i < coursesInSlot.size(); i++) {
+                        int students = coursesInSlot.get(i).getEnrolledStudentIDs().size();
+                        int capacity = roomsDesc.get(i).getCapacity();
+
+                        if (students > capacity) {
+                                return false; // Fits in time, but not in space
+                        }
+                }
+
+                return true;
         }
 
         boolean checkMaxStudentsPerDay(Course course, int slot) {
