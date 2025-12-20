@@ -88,101 +88,101 @@ public class Scheduler {
                 }
         }
 
-        public void generate_schedule(boolean skip_weekend) {
+      // Change the signature to accept initialDays and startDate
+public void generate_schedule(int initialDays, LocalDate startDate, boolean skip_weekend) {
 
-                this.courses.sort((c1, c2) -> {
-                        int deg1 = mp.getOrDefault(c1, new ArrayList<>()).size();
-                        int deg2 = mp.getOrDefault(c2, new ArrayList<>()).size();
-                        if (deg1 != deg2) return Integer.compare(deg2, deg1);
-                        return Integer.compare(c2.getEnrolledStudentIDs().size(), c1.getEnrolledStudentIDs().size());
-                });
+    // 1. Sorting logic (Kept same)
+    this.courses.sort((c1, c2) -> {
+        int deg1 = mp.getOrDefault(c1, new ArrayList<>()).size();
+        int deg2 = mp.getOrDefault(c2, new ArrayList<>()).size();
+        if (deg1 != deg2) return Integer.compare(deg2, deg1);
+        return Integer.compare(c2.getEnrolledStudentIDs().size(), c1.getEnrolledStudentIDs().size());
+    });
 
-                int maxRoomCapacity = this.classrooms.stream().mapToInt(ClassRoom::getCapacity).max().orElse(0);
-                for (Course c : this.courses) {
-                        if (c.getEnrolledStudentIDs().size() > maxRoomCapacity) {
-                                System.err.println("CRITICAL: Course " + c.getID() + " is too big.");
-                                return;
-                        }
-                }
-
-
-                ArrayList<TimeSlot> oneDaySlots = TimeSlot.slot_generator(1, LocalDate.now(), slotIds, skip_weekend);
-                int slotsPerDay = oneDaySlots.size();
-
-                int totalSlotsNeeded = 0;
-                for (Course c : courses) {
-                        int dur = c.getDuration();
-                        int step = TimeSlot.getStep_size_t();
-                        totalSlotsNeeded += (int) Math.ceil((double) dur / step);
-                }
-
-                int capacityPerDay = slotsPerDay * this.total_rooms;
-                int minDays = (int) Math.ceil((double) totalSlotsNeeded / capacityPerDay);
-                int days = Math.max(1, minDays);
-
-                if (DEBUG) {
-                        System.out.println("Calculated minimum required days: " + minDays);
-                        System.out.println("Starting scheduler at day: " + days);
-                }
-
-                boolean solved = false;
-                this.schedule = new HashMap<>();
-
-                while (!solved) {
-
-                        if (DEBUG) {
-                                System.out.println("Trying with " + days + " day(s)");
-                        }
-
-                        ArrayList<TimeSlot> curr = TimeSlot.slot_generator(days, LocalDate.now(), slotIds, skip_weekend);
-                        this.active_timeslots = curr;
-                        this.slots = new ArrayList<>();
-                        for (TimeSlot ts : curr) {
-                                this.slots.add(ts.getID());
-                        }
-
-                        int totalSystemCapacity = this.slots.size() * this.total_rooms;
-
-                        if (this.courses.size() > totalSystemCapacity) {
-                                if (DEBUG) System.out.println("Skipping " + days + " days (Not enough slots)");
-                                days++;
-                                continue;
-                        }
-
-                        this.startTime = System.currentTimeMillis();
-
-                        try {
-                                if (solver(0)) {
-                                        solved = true;
-                                        assignRooms();
-                                        if (DEBUG) {
-                                                System.out.println("Schedule possible in " + days + " day(s).");
-                                                for (var entry : schedule.entrySet()) {
-                                                        Course c = entry.getKey();
-                                                        int slot_id = entry.getValue();
-                                                        TimeSlot rt = curr.get(slot_id);
-                                                        ClassRoom room = roomAssignments.get(c);
-                                                        System.out.println(c.getID() + " -> " + rt + " [Room: " + (room != null ? room.getName() : "N/A") + "]");
-                                                }
-                                        }
-                                        return;
-                                } else {
-                                        schedule.clear();
-                                        days++;
-                                }
-                        } catch (RuntimeException e) {
-
-                                if (e.getMessage().equals("TIMEOUT")) {
-                                        if (DEBUG)
-                                                System.out.println(">> Timeout reached (3s). Abandoning " + days + " days. Trying next...");
-                                        schedule.clear();
-                                        days++;
-                                } else {
-                                        throw e;
-                                }
-                        }
-                }
+    // 2. Max Room Capacity Check (Kept same)
+    int maxRoomCapacity = this.classrooms.stream().mapToInt(ClassRoom::getCapacity).max().orElse(0);
+    for (Course c : this.courses) {
+        if (c.getEnrolledStudentIDs().size() > maxRoomCapacity) {
+            System.err.println("CRITICAL: Course " + c.getID() + " is too big.");
+            return;
         }
+    }
+
+    // 3. Set start days from user input instead of calculating logic
+    int days = initialDays; 
+
+    boolean solved = false;
+    this.schedule = new HashMap<>();
+
+    while (!solved) {
+
+        if (DEBUG) {
+            System.out.println("Trying with " + days + " day(s)");
+        }
+
+        // 4. Use the passed 'startDate' instead of LocalDate.now()
+        ArrayList<TimeSlot> curr = TimeSlot.slot_generator(days, startDate, slotIds, skip_weekend);
+        
+        this.active_timeslots = curr;
+        this.slots = new ArrayList<>();
+        for (TimeSlot ts : curr) {
+            this.slots.add(ts.getID());
+        }
+
+        // Capacity check (logic kept to skip impossible day counts quickly)
+        int totalSystemCapacity = this.slots.size() * this.total_rooms;
+        if (this.courses.size() > totalSystemCapacity) {
+            if (DEBUG) System.out.println("Skipping " + days + " days (Not enough slots)");
+            days++;
+            continue;
+        }
+
+        this.startTime = System.currentTimeMillis();
+
+        try {
+            if (solver(0)) {
+                solved = true;
+                assignRooms();
+                if (DEBUG) {
+                    System.out.println("Schedule possible in " + days + " day(s).");
+                    
+                    // 5. Updated Print Logic to include End Time
+                    for (var entry : schedule.entrySet()) {
+                        Course c = entry.getKey();
+                        int slot_id = entry.getValue();
+                        TimeSlot rt = curr.get(slot_id);
+                        ClassRoom room = roomAssignments.get(c);
+                        
+                        // Calculate End Time
+                        LocalTime start = rt.getTime();
+                        LocalTime end = start.plusMinutes(c.getDuration());
+
+                        System.out.println(String.format("%-10s -> %s %s - %s [Room: %s]", 
+                            c.getID(), 
+                            rt.getDate(), 
+                            start, 
+                            end, 
+                            (room != null ? room.getName() : "N/A")
+                        ));
+                    }
+                }
+                return;
+            } else {
+                schedule.clear();
+                days++; // Retry with +1 day
+            }
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("TIMEOUT")) {
+                if (DEBUG)
+                    System.out.println(">> Timeout reached (3s). Abandoning " + days + " days. Trying next...");
+                schedule.clear();
+                days++; // Retry with +1 day on timeout
+            } else {
+                throw e;
+            }
+        }
+    }
+}
 
         boolean solver(int courseIndex) {
 
@@ -303,12 +303,21 @@ public class Scheduler {
                 return startA.isBefore(endB) && startB.isBefore(endA);
         }
 
-        public static void main(String[] args) {
-                Scheduler scheduler = new Scheduler();
-                Path croom = Path.of("sampleData_AllClassroomsAndTheirCapacities.csv");
-                Path cour = Path.of("sampleData_AllCoursesWithTime.csv");
-                Path att = Path.of("sampleData_AllAttendanceLists.csv");
-                scheduler.init(croom, cour, att, 55);
-                scheduler.generate_schedule(false);
-        }
+     public static void main(String[] args) {
+    Scheduler scheduler = new Scheduler();
+
+    Path croom = Path.of("docs//sampleData_AllClassroomsAndTheirCapacities.csv");
+    Path cour = Path.of("docs//sampleData_AllCoursesWithTime.csv");
+    Path att = Path.of("docs//sampleData_AllAttendanceLists.csv");
+
+    scheduler.init(croom, cour, att, 55);
+
+    // --- UPDATED INPUTS ---
+    int startDayCount = 5;
+    // Set specific start date: Year, Month, Day
+    LocalDate startDate = LocalDate.of(2025, 12, 15); 
+    boolean skipWeekends = true;
+
+    scheduler.generate_schedule(startDayCount, startDate, skipWeekends);
+}
 }
