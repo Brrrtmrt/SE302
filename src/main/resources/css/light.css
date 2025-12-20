@@ -12,3 +12,9 @@
 .sidebar {
     -fx-background-color: #f4f4f4; /* Keep the original light gray */
 }
+
+.schedule-header {
+    -fx-background-color: #e0e0e0; /* Original Light Gray */
+    -fx-text-fill: black;          /* Black text */
+    -fx-border-color: #cccccc;
+}

@@ -99,6 +99,7 @@ public class MainViewController implements Initializable {
         attendanceList.setCellFactory(param -> new DeletableCell());
 
         mainContainer.setCenter(scheduleView); //the timetable
+        mainContainer.getStylesheets().add(getClass().getResource("/css/light.css").toExternalForm());
     }
 
     @FXML
@@ -271,14 +272,19 @@ public class MainViewController implements Initializable {
         Core.Scheduler scheduler = new Core.Scheduler();
         int stepSize = intervalSpinner.getValue();
         int dayCount = daysSpinner.getValue();
+
+        // 1. Define Start Date
+        LocalDate startDate = LocalDate.of(2025, 12, 15);
+
         scheduler.loadData(allCourses, allClassrooms, stepSize);
-        scheduler.generate_schedule(dayCount,LocalDate.of(2025, 12, 15),false); // Run Logic
+        scheduler.generate_schedule(dayCount, startDate, false);
 
         HashMap<Course, Integer> calculatedSchedule = scheduler.getSchedule();
         ArrayList<Helpers.TimeSlot> timeSlots = scheduler.getActiveTimeSlots();
         HashMap<Course, ClassRoom> calculatedRooms = scheduler.getRoomAssignments();
 
         if (calculatedSchedule == null || calculatedSchedule.isEmpty()) {
+            System.out.println("No schedule found.");
             return;
         }
 
@@ -287,11 +293,7 @@ public class MainViewController implements Initializable {
         finalSlotMap.clear();
         finalRoomMap.clear();
 
-        // Get visual settings
-        int startHour = 8; // Or use startHourSpinner.getValue() if you added it
-
-        // Use "Today" as the anchor, since Scheduler uses LocalDate.now()
-        java.time.LocalDate startDate = java.time.LocalDate.now();
+        int startHour = 8; // Or use startHourSpinner.getValue()
 
         for (var entry : calculatedSchedule.entrySet()) {
             Course course = entry.getKey();
@@ -299,35 +301,46 @@ public class MainViewController implements Initializable {
             Helpers.TimeSlot ts = timeSlots.get(slotID);
             ClassRoom assignedRoom = calculatedRooms.get(course);
 
-            // --- CHANGED LOGIC FOR DATE HEADERS ---
-            // Calculate how many days pass between Today and the Exam Date
+            // --- 1. DATE CALCULATION ---
             long daysDiff = ChronoUnit.DAYS.between(startDate, ts.getDate());
             int dayIndex = (int) daysDiff;
 
-            // Calculate Row Index
+            // --- 2. TIME CALCULATION ---
             long minutesFromStart = java.time.Duration.between(
                     java.time.LocalTime.of(startHour, 30),
                     ts.getTime()
             ).toMinutes();
-            int timeIndex = (int) (minutesFromStart / stepSize);
+            int startIndex = (int) (minutesFromStart / stepSize);
 
-            // Only add if within view (e.g. if Index is -1 or > totalDays, skip)
-            if (dayIndex >= 0 && timeIndex >= 0) {
-                scheduleView.addLesson(
-                        course.getID(),
-                        dayIndex,
-                        timeIndex,
-                        Color.LIGHTBLUE
-                );
+            // --- 3. DURATION LOGIC (NEW) ---
+            // Get course duration (e.g., 75 mins)
+            int duration = course.getDuration();
+
+            // Calculate how many slots this covers (e.g., 75 / 30 = 2.5 -> ceil -> 3 slots)
+            int slotsSpan = (int) Math.ceil((double) duration / stepSize);
+
+            // Loop to fill ALL cells this course occupies
+            if (dayIndex >= 0 && startIndex >= 0) {
+                for (int i = 0; i < slotsSpan; i++) {
+                    // Add the visual block to StartIndex, StartIndex+1, StartIndex+2...
+                    scheduleView.addLesson(
+                            course.getID(),
+                            dayIndex,
+                            startIndex + i,
+                            Color.LIGHTBLUE
+                    );
+                }
             }
 
-            // Export Data
+            // --- 4. EXPORT DATA ---
             finalSchedule.put(course, slotID);
             if (assignedRoom != null) finalRoomMap.put(course, assignedRoom);
+
+            // Fix: Export the REAL end time, not just start + stepSize
             finalSlotMap.put(slotID, new String[]{
                     ts.getDate().toString(),
                     ts.getTime().toString(),
-                    ts.getTime().plusMinutes(stepSize).toString()
+                    ts.getTime().plusMinutes(duration).toString() // Uses real duration
             });
         }
         System.out.println("Optimal Schedule Generated & Displayed.");
@@ -357,14 +370,13 @@ public class MainViewController implements Initializable {
     void handleDarkMode(ActionEvent event) {
         isDarkModeOn = !isDarkModeOn;
 
-        Scene scene = mainContainer.getScene();
-
-        scene.getStylesheets().clear();
+        // Use mainContainer instead of getScene() (safer and consistent)
+        mainContainer.getStylesheets().clear();
 
         if (isDarkModeOn) {
-            scene.getStylesheets().add(getClass().getResource("/css/dark.css").toExternalForm());
+            mainContainer.getStylesheets().add(getClass().getResource("/css/dark.css").toExternalForm());
         } else {
-            scene.getStylesheets().add(getClass().getResource("/css/light.css").toExternalForm());
+            mainContainer.getStylesheets().add(getClass().getResource("/css/light.css").toExternalForm());
         }
     }
 }
