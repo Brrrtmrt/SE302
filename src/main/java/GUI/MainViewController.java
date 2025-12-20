@@ -11,12 +11,16 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -315,6 +319,26 @@ public class MainViewController implements Initializable {
         }
 
         System.out.println("Optimal Schedule Generated & Displayed.");
+    }
+
+    //PLACE PDF INSIDE PROJECT FOLDERS
+    @FXML
+    void handleManuel(ActionEvent event){
+        try {
+            // 1. Define the file location
+            // ensure "UserManual.pdf" is in the root of your project folder (next to src)
+            File manualFile = new File("UserManual.pdf");
+
+            // 2. Check if Desktop is supported and file exists
+            if (Desktop.isDesktopSupported() && manualFile.exists()) {
+                Desktop.getDesktop().open(manualFile);
+            } else {
+                System.out.println("Manual file not found or Desktop not supported.");
+            }
+        } catch (IOException e) {
+            System.out.println("Error opening manual: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @FXML

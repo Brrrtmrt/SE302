@@ -7,14 +7,15 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.Spinner?> <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane fx:id="mainContainer" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.MainViewController">
+<BorderPane fx:id="mainContainer" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.MainViewController">
     <top>
         <MenuBar BorderPane.alignment="CENTER">
             <menus>
-                <Menu mnemonicParsing="false" text="File">
+                <Menu mnemonicParsing="false" text="Dosya">
                     <items>
                         <MenuItem mnemonicParsing="false" onAction="#importStudents" text="Import Stduent" />
                         <MenuItem mnemonicParsing="false" onAction="#importCourses" text="Import Course" />
@@ -23,9 +24,10 @@
                         <MenuItem mnemonicParsing="false" onAction="#exportTimetable" text="Export The TimeTable" />
                     </items>
                 </Menu>
-                <Menu mnemonicParsing="false" text="Edit">
+                <Menu mnemonicParsing="false" text="Daha Fazla">
                     <items>
-                        <CheckMenuItem mnemonicParsing="false" onAction="#handleDarkMode" text="Dark Mode" />
+                  <MenuItem mnemonicParsing="false" onAction="#handleManuel" text="Manuel" />
+                        <CheckMenuItem mnemonicParsing="false" onAction="#handleDarkMode" text="Karanlık Mod" />
                     </items>
                 </Menu>
             </menus>
@@ -47,8 +49,8 @@
             <Label style="-fx-font-weight: bold;" text="Attendance Lists" />
             <ListView fx:id="attendanceList" VBox.vgrow="ALWAYS" />
 
-            <Label text="Slot Duration (min):" style="-fx-font-weight: bold;"/>
-            <Spinner fx:id="intervalSpinner" editable="true" maxWidth="Infinity"/>
+            <Label style="-fx-font-weight: bold;" text="Slot Duration (min):" />
+            <Spinner fx:id="intervalSpinner" editable="true" maxWidth="Infinity" />
 
             <Button maxWidth="Infinity" onAction="#handleCreateSchedule" style="-fx-base: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" text="Create Optimal Schedule" />
 
