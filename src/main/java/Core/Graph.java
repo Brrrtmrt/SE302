@@ -1,5 +1,8 @@
 package Core;
 
+import IO.Importer;
+
+import java.nio.file.Path;
 import java.util.*;
 
 
@@ -60,29 +63,6 @@ class Graph {
 
                 return adjList;
         }
-
-        public static void main(String[] args) {
-                //      Test
-                /*Course c1 = new Course("SE 323");
-                c1.addEnrolledStudentID("Mert Saadet");
-                c1.addEnrolledStudentID("Mert Utma");
-
-                Course c2 = new Course("CE 323");
-                c2.addEnrolledStudentID("Mert Saadet"); //      Bu bir conflict, iki node birbirine bağlanmalı
-                c2.addEnrolledStudentID("Efe Mehmed");
-
-                Course c3 = new Course("GBE 251");
-                c3.addEnrolledStudentID("NA"); //       Conflict yok bağlantı olmamalı.
-
-                ArrayList<Course> allCourses = new ArrayList<>(List.of(c1, c2, c3));
-                HashMap<Course, ArrayList<Course>> graph = createGraph(allCourses);
-
-                //      Çizgeyi bastır
-                for (var x : graph.entrySet()) {
-                        System.out.println(x.getKey() + " conflicts with: " + x.getValue());
-                }
-        }
-        */
-        }
-
 }
+
+
