@@ -57,15 +57,18 @@ public class MainViewController implements Initializable {
         //preparing the schedule view
         scheduleView = new ScheduleView();
 
-        scheduleView.addLesson("HERAHNGI BI DERS", 0, 0, Color.GRAY);
+        //scheduleView.addLesson("HERAHNGI BI DERS", 0, 0, Color.GRAY);
         /*   I think we don't need this comment but i'm not sure so don't delete yet
         StackPane.setAlignment(schedule, javafx.geometry.Pos.CENTER);
         schedule.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         */
+        /*  MOCK DATA TO TEST THE UI
         studentList.getItems().addAll("Mert Utma", "Mert Saadet", "Abdullah Demir");
         courseList.getItems().addAll("Math 153", "Physics 100", "CE 302");
         classroomList.getItems().addAll("M102 (Cap: 50)", "C502 (Cap: 45)");
         attendanceList.getItems().addAll("Full", " 5 missing");
+         */
+
 
         //VERY CRUCIAL TO ENABLE DELETE BUTTONS
         studentList.setCellFactory(param -> new DeletableCell());
