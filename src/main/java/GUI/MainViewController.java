@@ -22,6 +22,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -269,9 +270,9 @@ public class MainViewController implements Initializable {
         System.out.println("Starting Scheduler Algorithm...");
         Core.Scheduler scheduler = new Core.Scheduler();
         int stepSize = intervalSpinner.getValue();
-
+        int dayCount = daysSpinner.getValue();
         scheduler.loadData(allCourses, allClassrooms, stepSize);
-        scheduler.generate_schedule(false); // Run Logic
+        scheduler.generate_schedule(dayCount,LocalDate.of(2025, 12, 15),false); // Run Logic
 
         HashMap<Course, Integer> calculatedSchedule = scheduler.getSchedule();
         ArrayList<Helpers.TimeSlot> timeSlots = scheduler.getActiveTimeSlots();
