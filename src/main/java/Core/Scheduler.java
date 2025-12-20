@@ -369,5 +369,15 @@ public class Scheduler {
                 Path att = Path.of("docs\\sampleData_AllAttendanceLists.csv");
                 scheduler.init(croom, cour, att, 55);
                 scheduler.generate_schedule(5, LocalDate.of(2025, 12, 15), false);
+                StudentProgramExtractor extractor = new StudentProgramExtractor(
+                scheduler.getSchedule(), 
+                scheduler.getActiveTimeSlots()
+                );
+
+                // 2. Get exams for a specific student
+                List<String> myExams = extractor.getExamsForStudent("Std_ID_001");
+                System.out.println("Exams for Std_ID_001: " + myExams);
+
+              
         }
 }
