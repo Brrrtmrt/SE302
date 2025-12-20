@@ -10,10 +10,7 @@ import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -50,12 +47,23 @@ public class MainViewController implements Initializable {
     private HashMap<Integer, String[]> finalSlotMap = new HashMap<>();
     private HashMap<Course, ClassRoom> finalRoomMap = new HashMap<>();
 
+    @FXML private Spinner<Integer> intervalSpinner;
+
 
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         //preparing the schedule view
         scheduleView = new ScheduleView();
+
+        SpinnerValueFactory<Integer> valueFactory =
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(15, 120, 60, 15);
+
+        intervalSpinner.setValueFactory(valueFactory);
+
+        intervalSpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
+            scheduleView.setSlotDuration(newVal);
+        });
 
         //scheduleView.addLesson("HERAHNGI BI DERS", 0, 0, Color.GRAY);
         /*   I think we don't need this comment but i'm not sure so don't delete yet
@@ -249,13 +257,11 @@ public class MainViewController implements Initializable {
 
         Core.Scheduler scheduler = new Core.Scheduler();
 
-
-        scheduler.loadData(allCourses, allClassrooms, 60);
-
+        int stepSize = intervalSpinner.getValue();
+        scheduler.loadData(allCourses, allClassrooms, stepSize);
 
         scheduler.generate_schedule(false);
 
-        // 4. Retrieve Results
         HashMap<Course, Integer> calculatedSchedule = scheduler.getSchedule();
         HashMap<Course, ClassRoom> calculatedRooms = scheduler.getRoomAssignments();
         ArrayList<Helpers.TimeSlot> timeSlots = scheduler.getActiveTimeSlots();
@@ -265,30 +271,27 @@ public class MainViewController implements Initializable {
             return;
         }
 
-
         scheduleView.clearLessons();
         finalSchedule.clear();
         finalSlotMap.clear();
         finalRoomMap.clear();
 
-
         for (var entry : calculatedSchedule.entrySet()) {
             Course course = entry.getKey();
             int slotID = entry.getValue();
 
-            // Get the actual TimeSlot object
             Helpers.TimeSlot ts = timeSlots.get(slotID);
             ClassRoom assignedRoom = calculatedRooms.get(course);
 
-
-
-            // Day: Convert Date to Grid Column (0=Mon, 1=Tue...)
             int dayIndex = ts.getDate().getDayOfWeek().getValue() - 1;
 
+            long minutesFromStart = java.time.Duration.between(
+                    java.time.LocalTime.of(8, 30),
+                    ts.getTime()
+            ).toMinutes();
 
-            int timeIndex = ts.getTime().getHour() - 8;
+            int timeIndex = (int) (minutesFromStart / stepSize);
 
-            // Safety check for indices
             if (dayIndex < 0) dayIndex = 0;
             if (timeIndex < 0) timeIndex = 0;
 
@@ -304,10 +307,9 @@ public class MainViewController implements Initializable {
                 finalRoomMap.put(course, assignedRoom);
             }
 
-
             String dateStr = ts.getDate().toString();
             String startStr = ts.getTime().toString();
-            String endStr = ts.getTime().plusMinutes(60).toString();
+            String endStr = ts.getTime().plusMinutes(stepSize).toString();
 
             finalSlotMap.put(slotID, new String[]{dateStr, startStr, endStr});
         }

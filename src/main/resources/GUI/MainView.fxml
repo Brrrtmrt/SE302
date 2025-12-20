@@ -7,30 +7,30 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.control.Spinner?> <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane fx:id="mainContainer" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.MainViewController">
-   <top>
-      <MenuBar BorderPane.alignment="CENTER">
-        <menus>
-          <Menu mnemonicParsing="false" text="File">
-            <items>
-                  <MenuItem mnemonicParsing="false" onAction="#importStudents" text="Import Stduent" />
-              <MenuItem mnemonicParsing="false" onAction="#importCourses" text="Import Course" />
-                  <MenuItem mnemonicParsing="false" onAction="#importClassroomCapacity" text="Import Classroom-Capacty" />
-                  <MenuItem mnemonicParsing="false" onAction="#importAttendanceList" text="Import Attendence List" />
-                  <MenuItem mnemonicParsing="false" onAction="#exportTimetable" text="Export The TimeTable" />
-            </items>
-          </Menu>
-          <Menu mnemonicParsing="false" text="Edit">
-               <items>
-                  <CheckMenuItem mnemonicParsing="false" onAction="#handleDarkMode" text="Dark Mode" />
-               </items>
-          </Menu>
-        </menus>
-      </MenuBar>
-   </top>
+    <top>
+        <MenuBar BorderPane.alignment="CENTER">
+            <menus>
+                <Menu mnemonicParsing="false" text="File">
+                    <items>
+                        <MenuItem mnemonicParsing="false" onAction="#importStudents" text="Import Stduent" />
+                        <MenuItem mnemonicParsing="false" onAction="#importCourses" text="Import Course" />
+                        <MenuItem mnemonicParsing="false" onAction="#importClassroomCapacity" text="Import Classroom-Capacty" />
+                        <MenuItem mnemonicParsing="false" onAction="#importAttendanceList" text="Import Attendence List" />
+                        <MenuItem mnemonicParsing="false" onAction="#exportTimetable" text="Export The TimeTable" />
+                    </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="Edit">
+                    <items>
+                        <CheckMenuItem mnemonicParsing="false" onAction="#handleDarkMode" text="Dark Mode" />
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+    </top>
 
     <right>
         <VBox prefWidth="250.0" spacing="10.0" style="-fx-padding: 10; -fx-border-color: #ccc; -fx-border-width: 0 0 0 1;" styleClass="sidebar">
@@ -46,6 +46,9 @@
 
             <Label style="-fx-font-weight: bold;" text="Attendance Lists" />
             <ListView fx:id="attendanceList" VBox.vgrow="ALWAYS" />
+
+            <Label text="Slot Duration (min):" style="-fx-font-weight: bold;"/>
+            <Spinner fx:id="intervalSpinner" editable="true" maxWidth="Infinity"/>
 
             <Button maxWidth="Infinity" onAction="#handleCreateSchedule" style="-fx-base: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" text="Create Optimal Schedule" />
 
