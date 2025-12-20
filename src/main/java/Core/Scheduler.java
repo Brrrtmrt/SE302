@@ -1,6 +1,5 @@
 package Core;
 
-
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -11,18 +10,17 @@ import java.util.HashSet;
 import Helpers.TimeSlot;
 import IO.Importer;
 
+import static Tests.Debug.*;
+
 
 public class Scheduler {
+
 
         Scheduler() {
         }
 
-        //      Most of these is useless
-
         //course names Ex:CE 323,EEE 242...
         private ArrayList<Course> courses;
-
-        private ArrayList<Course> attendance_list;
 
         //      Time Slots
         private ArrayList<LocalTime> slotIds;
@@ -30,33 +28,75 @@ public class Scheduler {
         //      Integer representation of slots
         private ArrayList<Integer> slots;
 
-        //course -> slot schedule[CE 323]=1 means exam will be on Monday 8.30AM.type is int for now may change.
+        //      Main schedule
         private HashMap<Course, Integer> schedule;
 
         //      Graph
         private HashMap<Course, ArrayList<Course>> mp;
+
+        //      Used for optimization
         private int total_rooms;
 
+        //      Used for optimization
         private int[] exams_per_slot;
 
         private ArrayList<ClassRoom> classrooms;
 
         private ArrayList<TimeSlot> active_timeslots;
 
+        private HashMap<Course, ClassRoom> roomAssignments;
+
         public void init(Path classroom, Path cour_path, Path attendance_path, int stepsize) {
+
+                //      These are imported and set  from JavaFX
+                this.classrooms = Importer.importClassRooms(classroom);
                 this.courses = Importer.importCourses(cour_path);
-                this.attendance_list = Importer.importAttandenceLists(attendance_path);
+                ArrayList<Course> attendance_list = Importer.importAttandenceLists(attendance_path);
+                this.total_rooms = this.classrooms.size();
+                //
+
                 TimeSlot.setStep_size_t(stepsize);
                 this.slotIds = TimeSlot.set_time_slots();
                 //      slots are init on generate_schedule
                 //      schedule is created on generate_schedule
                 this.mp = Graph.createGraph(attendance_list);
 
-                this.classrooms = Importer.importClassRooms(classroom);
-                this.total_rooms = this.classrooms.size();
+        }
+
+        private void assignRooms() {
+                this.roomAssignments = new HashMap<>();
+
+
+                HashMap<Integer, ArrayList<Course>> coursesBySlot = new HashMap<>();
+
+                for (var entry : schedule.entrySet()) {
+                        int slotId = entry.getValue();
+                        coursesBySlot.computeIfAbsent(slotId, k -> new ArrayList<>()).add(entry.getKey());
+                }
+
+
+                ArrayList<ClassRoom> roomsDesc = new ArrayList<>(this.classrooms);
+                roomsDesc.sort((r1, r2) -> Integer.compare(r2.getCapacity(), r1.getCapacity()));
+
+
+                for (int slotId : coursesBySlot.keySet()) {
+                        ArrayList<Course> coursesInThisSlot = coursesBySlot.get(slotId);
+
+
+                        coursesInThisSlot.sort((c1, c2) -> Integer.compare(c2.getEnrolledStudentIDs().size(), c1.getEnrolledStudentIDs().size()));
+
+
+                        for (int i = 0; i < coursesInThisSlot.size(); i++) {
+                                Course c = coursesInThisSlot.get(i);
+                                ClassRoom assignedRoom = roomsDesc.get(i);
+
+                                this.roomAssignments.put(c, assignedRoom);
+                        }
+                }
         }
 
         public void generate_schedule(boolean skip_weekend) {
+
                 this.courses.sort((c1, c2) -> Integer.compare(c2.getEnrolledStudentIDs().size(), c1.getEnrolledStudentIDs().size()));
 
 
@@ -88,7 +128,10 @@ public class Scheduler {
 
                 while (!solved) {
 
-                        System.out.println("Trying with " + days + " day(s)");
+                        if (DEBUG) {
+                                System.out.println("Trying with " + days + " day(s)");
+                        }
+
 
                         ArrayList<TimeSlot> curr = TimeSlot.slot_generator(days, LocalDate.now(), slotIds, skip_weekend);
 
@@ -106,23 +149,35 @@ public class Scheduler {
 
 
                         if (this.courses.size() > totalSystemCapacity) {
-                                System.out.println("Impossible: Trying to fit " + this.courses.size() +
-                                        " courses into " + totalSystemCapacity + " total slots.");
+
+                                if (DEBUG) {
+                                        System.out.println("Impossible: Trying to fit " + this.courses.size() +
+                                                " courses into " + totalSystemCapacity + " total slots.");
+                                }
+
                                 days++;
                                 continue; // Skip the solver entirely and try the next day
                         }
 
                         if (solver(0)) {
                                 solved = true;
-                                System.out.println("Schedule possible in " + days + " day(s).");
+                                assignRooms();
+                                if (DEBUG) {
+                                        System.out.println("Schedule possible in " + days + " day(s).");
+                                        for (var entry : schedule.entrySet()) {
+                                                Course c = entry.getKey();
+                                                int slot_id = entry.getValue();
+                                                TimeSlot rt = curr.get(slot_id);
+                                                //      day will not change, no exam on (e.g.23.00) can change later
+                                                LocalTime start = rt.getTime();
+                                                LocalTime end = start.plusMinutes(TimeSlot.getStep_size_t());
+                                                System.out.println(entry.getKey().getID() + " -> " + rt + " " + "ends at: " + end);
+                                                ClassRoom room = roomAssignments.get(c);
 
-                                for (var entry : schedule.entrySet()) {
-                                        int slot_id = entry.getValue();
-                                        TimeSlot rt = curr.get(slot_id);
-                                        //      day will not change, no exam on (e.g.23.00) can change later
-                                        LocalTime start = rt.getTime();
-                                        LocalTime end = start.plusMinutes(TimeSlot.getStep_size_t());
-                                        System.out.println(entry.getKey().getID() + " -> " + rt + " " + "ends at: " + end);
+                                                System.out.println(c.getID()
+                                                        + " -> " + rt
+                                                        + " [Room: " + (room != null ? room.getName() : "N/A") + "]");
+                                        }
                                 }
                                 return;
                         } else {
@@ -146,11 +201,13 @@ public class Scheduler {
                 //      Try every possible slot i because maybe it may throw ArrayIndexOutOfBoundsException if ID happens to be is something large      (somehow)
                 for (int i = 0; i < slots.size(); i++) {
 
-                        int slot = slots.get(i);
 
-                        if (!isGraphSafe(curr, slot)) {
+                        if (exams_per_slot[i] >= total_rooms) {
                                 continue;
                         }
+
+                        int slot = slots.get(i);
+
                         if (!checkRoomCapacity(curr, slot)) {
                                 continue;
                         }
@@ -189,7 +246,8 @@ public class Scheduler {
                 ArrayList<Course> neighbors = mp.get(current);
 
                 //      If no conflicts exist in the graph, it's safe
-                if (neighbors == null || neighbors.isEmpty()) return true;
+                if (neighbors == null || neighbors.isEmpty())
+                        return true;
 
                 //      Now check for time too
                 TimeSlot propTS = active_timeslots.get(proposedSlot);
@@ -333,21 +391,11 @@ public class Scheduler {
         }
 
         public static void main(String[] args) {
-
                 Scheduler scheduler = new Scheduler();
-                //      These should work without absolute paths FIX IT.
-                Path croom = Path.of("docs\\sampleData_AllClassroomsAndTheirCapacities.csv");
-                Path cour = Path.of("docs\\sampleData_AllCoursesWithTime.csv");
-                Path att = Path.of("docs\\sampleData_AllAttendanceLists.csv");
+                Path croom = Path.of("sampleData_AllClassroomsAndTheirCapacities.csv");
+                Path cour = Path.of("sampleData_AllCoursesWithTime.csv");
+                Path att = Path.of("sampleData_AllAttendanceLists.csv");
                 scheduler.init(croom, cour, att, 55);
                 scheduler.generate_schedule(false);
-
-                /*      This is tested, output may look abnormal
-                        it is valid (not checking the constraints
-                        bounded by subprograms)
-                *
-                *
-                * */
-
         }
 }

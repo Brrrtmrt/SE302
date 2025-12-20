@@ -27,6 +27,7 @@ public class TimeSlot {
                 if (step_size < 0) {
                         System.err.println("Error: Step size must be a positive integer.");
                         TimeSlot.step_size_t = 55;
+                        return;
                 }
                 TimeSlot.step_size_t = step_size;
         }
