@@ -18,8 +18,10 @@ public class Scheduler {
 
 
         private final Random random = new Random();
-        private int THROW_THRESHOLD; // Will be set dynamically
+        private int THROW_THRESHOLD = 12; // Will be set dynamically
         private final int MAX_LEVEL_CAP = 20; // Safety cap
+        private long startTime;
+        private final long TIMEOUT_MS = 2000;
 
         public Scheduler() {
         }
@@ -49,11 +51,32 @@ public class Scheduler {
                 this.classrooms = Importer.importClassRooms(classroom);
                 this.courses = Importer.importCourses(cour_path);
                 ArrayList<Course> attendance_list = Importer.importAttandenceLists(attendance_path);
+
+
+                HashMap<String, Course> courseMap = new HashMap<>();
+                for (Course c : this.courses) {
+                        courseMap.put(c.getID(), c);
+                }
+
+
+                for (Course attCourse : attendance_list) {
+                        Course mainCourse = courseMap.get(attCourse.getID());
+                        if (mainCourse != null) {
+                                for (String studentID : attCourse.getEnrolledStudentIDs()) {
+                                        mainCourse.addEnrolledStudentID(studentID);
+                                }
+                        }
+                }
+
+
                 this.total_rooms = this.classrooms.size();
                 TimeSlot.setStep_size_t(stepsize);
                 this.slotIds = TimeSlot.set_time_slots();
-                this.mp = Graph.createGraph(attendance_list);
+
+
+                this.mp = Graph.createGraph(this.courses);
         }
+
 
         public void loadData(ArrayList<Course> courses, ArrayList<ClassRoom> classrooms, int stepsize) {
                 this.courses = courses;
@@ -111,12 +134,12 @@ public class Scheduler {
                         return Integer.compare(c2.getEnrolledStudentIDs().size(), c1.getEnrolledStudentIDs().size());
                 });
 
-                int n = Math.max(1, this.courses.size());
+              /*  int n = Math.max(1, this.courses.size());
                 int log2Courses = (int) (Math.log(n) / Math.log(2));
-                int calculated = log2Courses + 3;
-                this.THROW_THRESHOLD = Math.min(calculated, MAX_LEVEL_CAP - 1);
-                if (DEBUG) System.out.println("Dynamic Threshold set to: " + THROW_THRESHOLD);
+                this.THROW_THRESHOLD = log2Courses + 3;
 
+                if (DEBUG) System.out.println("Dynamic Threshold set to: " + THROW_THRESHOLD);
+*/
 
                 int maxRoomCapacity = this.classrooms.stream().mapToInt(ClassRoom::getCapacity).max().orElse(0);
                 for (Course c : this.courses) {
@@ -133,7 +156,7 @@ public class Scheduler {
                 this.schedule = new HashMap<>();
 
                 while (!solved) {
-
+                        this.startTime = System.currentTimeMillis();
                         if (DEBUG) {
                                 System.out.println("Trying with " + days + " day(s)");
                         }
@@ -190,8 +213,7 @@ public class Scheduler {
                         } catch (RuntimeException e) {
                                 if (e.getMessage().equals("RANDOM_RESTART")) {
                                         if (DEBUG)
-                                                System.out.println(">> Timeout reached (3s). Abandoning " + days + " days. Trying next...");
-                                        schedule.clear();
+                                                schedule.clear();
                                         days++; // Retry with +1 day on timeout
                                 } else {
                                         throw e;
@@ -205,6 +227,7 @@ public class Scheduler {
                 if (randomLevel() >= THROW_THRESHOLD) {
                         throw new RuntimeException("RANDOM_RESTART");
                 }
+
 
 
                 if (courseIndex == courses.size()) {
@@ -329,7 +352,7 @@ public class Scheduler {
                 scheduler.init(croom, cour, att, 55);
 
 
-                int startDayCount = 10;
+                int startDayCount = 15;
 
                 LocalDate startDate = LocalDate.of(2025, 12, 15);
                 boolean skipWeekends = true;
