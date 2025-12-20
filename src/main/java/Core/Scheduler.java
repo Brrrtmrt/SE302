@@ -72,7 +72,7 @@ public class Scheduler {
                 int theoreticalMin = Math.max(minDaysByVolume, minDaysByStudent);
 
 
-                int buffer = (int) Math.ceil(theoreticalMin * 0.75);
+                int buffer = (int) Math.ceil(theoreticalMin * 0.7);
 
                 int optimalStart = theoreticalMin + buffer;
 
