@@ -61,59 +61,58 @@ public class Importer {
         public static ArrayList<Course> importCourses(Path filePath) {
                 String separator = new Importer().detectSeparator(filePath);
                 if (separator.equals("+")) {
-                ArrayList<Course> courses = new ArrayList<>();
-                try (BufferedReader reader = Files.newBufferedReader(filePath)) {
-                        reader.readLine(); // Skip header line
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                                line = line.trim();
-                                if (!line.isEmpty()) {
-
-
-                                        Course course = new Course(line,90);
-                                        System.out.println("Imported Course with ID: " + course.getID()+" with default duration 90");
-                                        courses.add(course);
-
-                                }
-                        }
-
-                } catch (IOException e) {
-                        System.out.println("Error reading Students file: " + e.getMessage());
-
-                }
-                return courses;
-                
-                }//if
-                
-                else {
-                           ArrayList<Course> courses = new ArrayList<>();
-                        if (separator.equals(",")) {
-                                
-                                try (BufferedReader reader = Files.newBufferedReader(filePath)) {
+                        ArrayList<Course> courses = new ArrayList<>();
+                        try (BufferedReader reader = Files.newBufferedReader(filePath)) {
                                 reader.readLine(); // Skip header line
                                 String line;
                                 while ((line = reader.readLine()) != null) {
-                                        String[] parts = line.split(separator);
-                                        if (parts.length >= 1) {
-                                                String id = parts[0].trim();
-                                                int duration = parts[1].trim().isEmpty() ? 90 : Integer.parseInt(parts[1].trim());
-                                                Course course = new Course(id,duration);
+                                        line = line.trim();
+                                        if (!line.isEmpty()) {
+
+
+                                                Course course = new Course(line, 90);
+                                                System.out.println("Imported Course with ID: " + course.getID() + " with default duration 90");
                                                 courses.add(course);
-                                                System.out.println("Imported Course: " + course.getID()+" with duration " + course.getDuration());
+
                                         }
-                                        
+                                }
+
+                        } catch (IOException e) {
+                                System.out.println("Error reading Students file: " + e.getMessage());
+
+                        }
+                        return courses;
+
+                }//if
+
+                else {
+                        ArrayList<Course> courses = new ArrayList<>();
+                        if (separator.equals(",")) {
+
+                                try (BufferedReader reader = Files.newBufferedReader(filePath)) {
+                                        reader.readLine(); // Skip header line
+                                        String line;
+                                        while ((line = reader.readLine()) != null) {
+                                                String[] parts = line.split(separator);
+                                                if (parts.length >= 1) {
+                                                        String id = parts[0].trim();
+                                                        int duration = parts[1].trim().isEmpty() ? 90 : Integer.parseInt(parts[1].trim());
+                                                        Course course = new Course(id, duration);
+                                                        courses.add(course);
+                                                        System.out.println("Imported Course: " + course.getID() + " with duration " + course.getDuration());
+                                                }
+
+                                        }
+
+
+                                } catch (IOException e) {
+                                        System.out.println("Error reading Students file: " + e.getMessage());
+
                                 }
 
 
-
-                      } catch (IOException e) {
-                         System.out.println("Error reading Students file: " + e.getMessage());
-
-                      }
-
-                         
                         }
-                       return courses;
+                        return courses;
                 }
         }
 
@@ -146,7 +145,7 @@ public class Importer {
                                         // Clean the string
                                         String cleanLine = line.replace("[", "").replace("]", "").replace("'", "");
 
-                                        Course course = new Course(currentCourseID,90);
+                                        Course course = new Course(currentCourseID, 90);
 
                                         // Only split if there is content (handles "[]" empty lists)
                                         if (!cleanLine.isBlank()) {
@@ -180,9 +179,11 @@ public class Importer {
                         reader.readLine(); // Skip header line
                         while ((line = reader.readLine()) != null) {
                                 if (line.trim().isEmpty()) continue;
-                               if (line.contains(",")) return ",";
-                               if (line.contains(";")) return ";";
-                               else { return "+";}
+                                if (line.contains(",")) return ",";
+                                if (line.contains(";")) return ";";
+                                else {
+                                        return "+";
+                                }
                         }
                 } catch (IOException e) {
                         System.err.println("Error detecting separator: " + e.getMessage());
@@ -194,7 +195,7 @@ public class Importer {
 
                 ArrayList<Course> courses2 = importCourses(Path.of("docs\\sampleData_AllCoursesWithTime.csv"));
                 for (Course course : courses2) {
-                        System.out.println("Course ID: " + course.getID()+", Duration: " + course.getDuration());
+                        System.out.println("Course ID: " + course.getID() + ", Duration: " + course.getDuration());
                 }
                 ArrayList<Student> students2 = importStudents(Path.of("docs\\sampleData_AllStudents.csv"));
                 for (Student student : students2) {

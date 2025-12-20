@@ -1,4 +1,4 @@
-package Tests;
+package IO;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -9,9 +9,9 @@ import java.util.StringJoiner;
 public class DataGenerator {
 
         //                      TESTING
-        private static final int NUM_CLASSROOMS = 10;
-        private static final int NUM_COURSES = 2000;
-        private static final int NUM_STUDENTS = 10000;
+        private static final int NUM_CLASSROOMS = 156;
+        private static final int NUM_COURSES = 1178;
+        private static final int NUM_STUDENTS = 8000;
 
         // File Names
         private static final String FILE_CLASSROOMS = "sampleData_AllClassroomsAndTheirCapacities.csv";
