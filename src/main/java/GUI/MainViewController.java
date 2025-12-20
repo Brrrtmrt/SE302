@@ -263,8 +263,13 @@ public class MainViewController implements Initializable {
 
             if (dayIndex >= 0 && startIndex >= 0) {
                 for (int i = 0; i < slotsSpan; i++) {
+                    String cellText = course.getID();
+                    if (assignedRoom != null) {
+                        cellText += "\n" + assignedRoom.getName();
+                    }
+
                     scheduleView.addLesson(
-                            course.getID(),
+                            cellText,
                             dayIndex,
                             startIndex + i,
                             Color.DARKBLUE
