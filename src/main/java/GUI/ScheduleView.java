@@ -11,6 +11,8 @@ import javafx.scene.text.TextAlignment;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Locale;
 
 public class ScheduleView extends GridPane {
 
@@ -20,8 +22,8 @@ public class ScheduleView extends GridPane {
     private LocalTime startTime = LocalTime.of(8, 30);
     private LocalTime endTime = LocalTime.of(18, 30);
     private int slotDurationMinutes = 60;
+    private ArrayList<Label> dayHeaderLabels = new ArrayList<>();
 
-    // We still store the VBox reference so addLesson can find it easily
     private VBox[][] cells;
 
     public ScheduleView() {
@@ -33,7 +35,11 @@ public class ScheduleView extends GridPane {
         setupGrid();
     }
 
-    // --- CONFIGURATION ---
+    public void setStartDate(LocalDate date) {
+        this.startDate = date;
+        setupGrid();
+    }
+
     public void setDayCount(int days) {
         this.totalDays = days;
         setupGrid();
@@ -54,7 +60,6 @@ public class ScheduleView extends GridPane {
         setupGrid();
     }
 
-    // --- GRID GENERATION ---
     private void setupGrid() {
         this.getChildren().clear();
         this.getColumnConstraints().clear();
@@ -65,28 +70,26 @@ public class ScheduleView extends GridPane {
 
         cells = new VBox[totalDays][totalRows + 5];
 
-        // 1. Time Column
         ColumnConstraints timeCol = new ColumnConstraints();
         timeCol.setPercentWidth(10);
         this.getColumnConstraints().add(timeCol);
 
-        // 2. Day Columns
         for (int i = 0; i < totalDays; i++) {
             ColumnConstraints dayCol = new ColumnConstraints();
             dayCol.setPercentWidth(90.0 / totalDays);
             this.getColumnConstraints().add(dayCol);
         }
 
-        // 3. Header Row
         this.add(createHeaderLabel("Time"), 0, 0);
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM");
+
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy EEE", new Locale("tr", "TR"));
 
         for (int i = 0; i < totalDays; i++) {
             LocalDate date = startDate.plusDays(i);
             this.add(createHeaderLabel(date.format(dateFormatter)), i + 1, 0);
         }
+        // -------------------------------------
 
-        // 4. Time Rows & Scrollable Cells
         LocalTime currentTime = startTime;
         int row = 1;
 
@@ -104,27 +107,20 @@ public class ScheduleView extends GridPane {
 
             for (int col = 0; col < totalDays; col++) {
 
-                // A. The Container for Exams (VBox)
                 VBox cellContent = new VBox(2);
                 cellContent.setAlignment(Pos.TOP_CENTER);
-                // Background color for the content itself
                 cellContent.setStyle("-fx-background-color: white;");
 
-                // B. The Scroller (Wraps the VBox)
                 ScrollPane scroller = new ScrollPane(cellContent);
-                scroller.setFitToWidth(true); // Content stretches to fill width
-                scroller.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER); // No horizontal scroll
-                scroller.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED); // Scroll only if needed
-
-                // Style the scroller to look like a grid cell
+                scroller.setFitToWidth(true);
+                scroller.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+                scroller.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
                 scroller.setStyle("-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: lightgray;");
 
-                // Save reference to the VBox (not the scroller) so addLesson works
                 if (row - 1 < cells[col].length) {
                     cells[col][row - 1] = cellContent;
                 }
 
-                // Add the SCROLLER to the grid
                 this.add(scroller, col + 1, row);
             }
 
@@ -177,13 +173,8 @@ public class ScheduleView extends GridPane {
         Label label = new Label(text);
         label.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         label.setAlignment(Pos.CENTER);
-
-        // 1. Assign a CSS class so we can control color from the .css file
         label.getStyleClass().add("schedule-header");
-
-        // 2. Only keep structural styling here (remove -fx-background-color!)
         label.setStyle("-fx-font-weight: bold;");
-
         return label;
     }
 

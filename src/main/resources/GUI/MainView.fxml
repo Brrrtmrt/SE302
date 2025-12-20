@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckMenuItem?>
+<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
@@ -9,7 +10,9 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.Spinner?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
 <BorderPane fx:id="mainContainer" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.MainViewController">
     <top>
@@ -17,11 +20,11 @@
             <menus>
                 <Menu mnemonicParsing="false" text="Dosya">
                     <items>
-                        <MenuItem mnemonicParsing="false" onAction="#importStudents" text="Import Stduent" />
-                        <MenuItem mnemonicParsing="false" onAction="#importCourses" text="Import Course" />
-                        <MenuItem mnemonicParsing="false" onAction="#importClassroomCapacity" text="Import Classroom-Capacty" />
-                        <MenuItem mnemonicParsing="false" onAction="#importAttendanceList" text="Import Attendence List" />
-                        <MenuItem mnemonicParsing="false" onAction="#exportTimetable" text="Export The TimeTable" />
+                        <MenuItem mnemonicParsing="false" onAction="#importStudents" text="Öğrenci Aktar" />
+                        <MenuItem mnemonicParsing="false" onAction="#importCourses" text="Ders Aktar" />
+                        <MenuItem mnemonicParsing="false" onAction="#importClassroomCapacity" text="Sınıf-Kapasite Aktar" />
+                        <MenuItem mnemonicParsing="false" onAction="#importAttendanceList" text="Katılım Listesi Aktar" />
+                        <MenuItem mnemonicParsing="false" onAction="#exportTimetable" text="Tabloyu Dışarı Aktar" />
                     </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="Daha Fazla">
@@ -37,25 +40,35 @@
     <right>
         <VBox prefWidth="250.0" spacing="10.0" style="-fx-padding: 10; -fx-border-color: #ccc; -fx-border-width: 0 0 0 1;" styleClass="sidebar">
 
-            <Label style="-fx-font-weight: bold;" text="All Students" />
+            <Label style="-fx-font-weight: bold;" text="Tüm Öğrenciler" />
             <ListView fx:id="studentList" VBox.vgrow="ALWAYS" />
 
-            <Label style="-fx-font-weight: bold;" text="All Courses" />
+            <Label style="-fx-font-weight: bold;" text="Tüm Dersler" />
             <ListView fx:id="courseList" VBox.vgrow="ALWAYS" />
 
-            <Label style="-fx-font-weight: bold;" text="Classrooms &amp; Capacities" />
+            <Label style="-fx-font-weight: bold;" text="Sınıflar ve Kapasiteler" />
             <ListView fx:id="classroomList" VBox.vgrow="ALWAYS" />
 
-            <Label style="-fx-font-weight: bold;" text="Attendance Lists" />
+            <Label style="-fx-font-weight: bold;" text="Katılım Listesi" />
             <ListView fx:id="attendanceList" VBox.vgrow="ALWAYS" />
 
-            <Label style="-fx-font-weight: bold;" text="Slot Duration (min):" />
+            <Label style="-fx-font-weight: bold;" text="Aralık Süresi (dk):" />
             <Spinner fx:id="intervalSpinner" editable="true" maxWidth="Infinity" />
 
-            <Label style="-fx-font-weight: bold;" text="Total Days:" />
+            <Label style="-fx-font-weight: bold;" text="Toplam Gün" />
             <Spinner fx:id="daysSpinner" editable="true" maxWidth="Infinity" />
+         <HBox prefHeight="100.0" prefWidth="200.0">
+            <children>
+               <DatePicker fx:id="startDatePicker" prefHeight="25.0" prefWidth="158.0" />
+               <Label alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="80.0" text="Başlangıç Tarihi">
+                  <font>
+                     <Font name="Cambria Bold" size="10.0" />
+                  </font>
+               </Label>
+            </children>
+         </HBox>
 
-            <Button maxWidth="Infinity" onAction="#handleCreateSchedule" style="-fx-base: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" text="Create Optimal Schedule" />
+            <Button maxWidth="Infinity" onAction="#handleCreateSchedule" style="-fx-base: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" text="Optimal Tabloyu Oluştur" />
 
         </VBox>
     </right>
