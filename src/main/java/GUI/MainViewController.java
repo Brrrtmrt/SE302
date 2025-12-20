@@ -30,38 +30,38 @@ public class MainViewController implements Initializable {
 
     @FXML private BorderPane mainContainer;
 
-    // --- VISUAL LISTS ---
+    // visual lists
     @FXML private ListView<String> studentList;
     @FXML private ListView<String> courseList;
     @FXML private ListView<String> classroomList;
     @FXML private ListView<String> attendanceList;
 
-    // --- DATA STORAGE ---
+    // data
     private ArrayList<Student> allStudents = new ArrayList<>();
     private ArrayList<Course> allCourses = new ArrayList<>();
     private ArrayList<ClassRoom> allClassrooms = new ArrayList<>();
-    // NEW: We must store attendance separately to merge it later
     private ArrayList<Course> allAttendance = new ArrayList<>();
 
-    // --- STATE & VIEWS ---
+    // state & views
     private boolean isDarkModeOn = false;
     private ScheduleView scheduleView;
 
-    // --- EXPORT DATA ---
+    // export data
     private HashMap<Course, Integer> finalSchedule = new HashMap<>();
     private HashMap<Integer, String[]> finalSlotMap = new HashMap<>();
     private HashMap<Course, ClassRoom> finalRoomMap = new HashMap<>();
 
-    // --- CONTROLS ---
+    // controls
     @FXML private Spinner<Integer> intervalSpinner;
     @FXML private Spinner<Integer> daysSpinner;
+    @FXML private DatePicker startDatePicker;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // 1. Initialize ScheduleView
+        //Initialize ScheduleView
         scheduleView = new ScheduleView();
 
-        // 2. Setup Interval Spinner (Time Slots)
+        //Setup Interval Spinner (Time Slots)
         SpinnerValueFactory<Integer> valueFactory =
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(15, 120, 60, 15);
         intervalSpinner.setValueFactory(valueFactory);
@@ -69,7 +69,7 @@ public class MainViewController implements Initializable {
             scheduleView.setSlotDuration(newVal);
         });
 
-        // 3. Setup Days Spinner (Total Days)
+        //Setup Days Spinner (Total Days)
         SpinnerValueFactory<Integer> daysFactory =
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 14, 5, 1);
         daysSpinner.setValueFactory(daysFactory);
@@ -77,16 +77,30 @@ public class MainViewController implements Initializable {
             scheduleView.setDayCount(newVal);
         });
 
-        // 4. Setup Delete Buttons
+        // Delete Buttons
         studentList.setCellFactory(param -> new DeletableCell());
         courseList.setCellFactory(param -> new DeletableCell());
         classroomList.setCellFactory(param -> new DeletableCell());
         attendanceList.setCellFactory(param -> new DeletableCell());
 
-        // 5. Final Layout Setup
+        //init the date picker
+        startDatePicker.setValue(LocalDate.now());
+
+        //listener for the date picker
+        startDatePicker.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                scheduleView.setStartDate(newValue);
+
+                if (!allCourses.isEmpty() && !allClassrooms.isEmpty()) {
+                    System.out.println("Date changed to " + newValue + ", regenerating schedule...");
+                    handleCreateSchedule(null);
+                }
+            }
+        });
+
+        // Layout Setup
         mainContainer.setCenter(scheduleView);
 
-        // Force load Light Mode CSS on startup
         mainContainer.getStylesheets().add(getClass().getResource("/css/light.css").toExternalForm());
     }
 
@@ -156,13 +170,10 @@ public class MainViewController implements Initializable {
         System.out.println("Starting Scheduler Algorithm...");
         Core.Scheduler scheduler = new Core.Scheduler();
 
-        // --- CRITICAL FIX: MERGE ATTENDANCE INTO COURSES BEFORE SCHEDULING ---
-        // The Scheduler.loadData assumes courses already have students in them.
-        // We must map the attendance data (allAttendance) into the course objects (allCourses).
+
 
         HashMap<String, Course> courseMap = new HashMap<>();
         for (Course c : allCourses) {
-            // Reset students to avoid duplicates if button is clicked twice
             c.getEnrolledStudentIDs().clear();
             courseMap.put(c.getID(), c);
         }
@@ -177,17 +188,21 @@ public class MainViewController implements Initializable {
         }
         // ---------------------------------------------------------------------
 
-        // 1. Load Data (Now that courses have students inside them)
+        // load data
         int stepSize = intervalSpinner.getValue();
         scheduler.loadData(allCourses, allClassrooms, stepSize);
 
-        // 2. Run Generation
         int userRequestedDays = daysSpinner.getValue();
-        LocalDate startDate = LocalDate.of(2025, 12, 15);
+        LocalDate startDate = startDatePicker.getValue();
+
+        if (startDate == null) {
+            startDate = LocalDate.now();
+            startDatePicker.setValue(startDate);
+        }
 
         scheduler.generate_schedule(userRequestedDays, startDate, false);
 
-        // 3. Retrieve Results
+        // retrieve results
         HashMap<Course, Integer> calculatedSchedule = scheduler.getSchedule();
         ArrayList<Helpers.TimeSlot> timeSlots = scheduler.getActiveTimeSlots();
         HashMap<Course, ClassRoom> calculatedRooms = scheduler.getRoomAssignments();
@@ -197,7 +212,7 @@ public class MainViewController implements Initializable {
             return;
         }
 
-        // 4. Update UI Bounds (If scheduler used more days than spinner shows)
+        // UPDATE UI VERY IMPRTANT
         if (!timeSlots.isEmpty()) {
             LocalDate lastDate = timeSlots.get(timeSlots.size() - 1).getDate();
             long actualDaysLong = ChronoUnit.DAYS.between(startDate, lastDate) + 1;
@@ -217,15 +232,17 @@ public class MainViewController implements Initializable {
             }
         }
 
-        // 5. Clear Old Data
+        // CLEAR THE OLD DATA
         scheduleView.clearLessons();
         finalSchedule.clear();
         finalSlotMap.clear();
         finalRoomMap.clear();
 
+        scheduleView.setStartDate(startDate);
+
         int startHour = 8;
 
-        // 6. Draw Lessons
+        // DRAW THE LESSONS (IMPORTANT)
         for (var entry : calculatedSchedule.entrySet()) {
             Course course = entry.getKey();
             int slotID = entry.getValue();
@@ -250,7 +267,7 @@ public class MainViewController implements Initializable {
                             course.getID(),
                             dayIndex,
                             startIndex + i,
-                            Color.LIGHTBLUE
+                            Color.DARKBLUE
                     );
                 }
             }
