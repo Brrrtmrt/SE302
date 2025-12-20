@@ -52,6 +52,9 @@
             <Label style="-fx-font-weight: bold;" text="Slot Duration (min):" />
             <Spinner fx:id="intervalSpinner" editable="true" maxWidth="Infinity" />
 
+            <Label style="-fx-font-weight: bold;" text="Total Days:" />
+            <Spinner fx:id="daysSpinner" editable="true" maxWidth="Infinity" />
+
             <Button maxWidth="Infinity" onAction="#handleCreateSchedule" style="-fx-base: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" text="Create Optimal Schedule" />
 
         </VBox>

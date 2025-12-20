@@ -6,94 +6,116 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 
 public class ScheduleView extends GridPane {
 
-    private final String[] days = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
-
-    // Default settings
+    // Dynamic settings
+    private int totalDays = 5; // Default
+    private LocalDate startDate = LocalDate.now(); // Start from Today
     private LocalTime startTime = LocalTime.of(8, 30);
-    private LocalTime endTime = LocalTime.of(18, 30); // Adjust end time as needed
-    private int slotDurationMinutes = 60; // Default
+    private LocalTime endTime = LocalTime.of(18, 30);
+    private int slotDurationMinutes = 60;
 
     public ScheduleView() {
         this.setPadding(new Insets(20));
         this.setHgap(5);
         this.setVgap(5);
-        this.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE); // Fill screen
+        this.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
-        // Initial build
         setupGrid();
     }
 
-    /**
-     * Call this to change the interval (e.g., 30, 45, 60 minutes)
-     */
-    public void setSlotDuration(int minutes) {
-        this.slotDurationMinutes = minutes;
-        setupGrid(); // Rebuild grid
+    // --- CONFIGURATION METHODS ---
+
+    public void setDayCount(int days) {
+        this.totalDays = days;
+        setupGrid();
     }
 
+    public void setSlotDuration(int minutes) {
+        this.slotDurationMinutes = minutes;
+        setupGrid();
+    }
+
+    public void setStartHour(int hour) {
+        this.startTime = LocalTime.of(hour, 30);
+        setupGrid();
+    }
+
+    public void setEndHour(int hour) {
+        this.endTime = LocalTime.of(hour, 30);
+        setupGrid();
+    }
+
+    // --- GRID GENERATION ---
+
     private void setupGrid() {
-        // 1. Clear everything to rebuild
         this.getChildren().clear();
         this.getColumnConstraints().clear();
         this.getRowConstraints().clear();
 
-        // 2. Setup Columns (Time + 5 Days)
+        // 1. Time Column
         ColumnConstraints timeCol = new ColumnConstraints();
         timeCol.setPercentWidth(10);
         this.getColumnConstraints().add(timeCol);
 
-        for (int i = 0; i < days.length; i++) {
+        // 2. Day Columns (Dynamic)
+        // We divide remaining 90% width by the number of days
+        for (int i = 0; i < totalDays; i++) {
             ColumnConstraints dayCol = new ColumnConstraints();
-            dayCol.setPercentWidth(18); // 90% / 5 days
+            dayCol.setPercentWidth(90.0 / totalDays);
             this.getColumnConstraints().add(dayCol);
         }
 
-        // 3. Add Day Headers (Row 0)
+        // 3. Header Row (DATES instead of Names)
         this.add(createHeaderLabel("Time"), 0, 0);
-        for (int i = 0; i < days.length; i++) {
-            this.add(createHeaderLabel(days[i]), i + 1, 0);
+
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        for (int i = 0; i < totalDays; i++) {
+            // Calculate date: Start Date + i days
+            LocalDate date = startDate.plusDays(i);
+            this.add(createHeaderLabel(date.format(dateFormatter)), i + 1, 0);
         }
 
-        // 4. Generate Rows Dynamically
+        // 4. Time Rows
         LocalTime currentTime = startTime;
         int row = 1;
 
+        if (startTime.isAfter(endTime)) return;
+
         while (currentTime.isBefore(endTime)) {
-            // Add Row Constraint to make it grow
             RowConstraints rc = new RowConstraints();
             rc.setVgrow(Priority.ALWAYS);
             rc.setFillHeight(true);
             this.getRowConstraints().add(rc);
 
-            // Time Label
             String timeStr = currentTime.format(DateTimeFormatter.ofPattern("HH:mm"));
             this.add(createHeaderLabel(timeStr), 0, row);
 
             // Empty Cells
-            for (int col = 0; col < days.length; col++) {
+            for (int col = 0; col < totalDays; col++) {
                 StackPane cell = new StackPane();
                 cell.setStyle("-fx-border-color: lightgray; -fx-background-color: white;");
                 this.add(cell, col + 1, row);
             }
 
-            // Increment time
             currentTime = currentTime.plusMinutes(slotDurationMinutes);
             row++;
         }
 
-        // Add header row constraint
         RowConstraints headerRow = new RowConstraints();
         headerRow.setMinHeight(30);
         this.getRowConstraints().add(0, headerRow);
     }
 
     public void addLesson(String lessonName, int dayIndex, int timeIndex, Color color) {
+        // Ignore if lesson is outside the current view (e.g. Day 6 when showing 5 days)
+        if (dayIndex >= totalDays) return;
+
         StackPane lessonPane = new StackPane();
         lessonPane.setStyle("-fx-background-color: " + toHexString(color) +
                 "; -fx-border-color: darkgray; -fx-border-width: 1;");
@@ -113,7 +135,6 @@ public class ScheduleView extends GridPane {
         Label label = new Label(text);
         label.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         label.setAlignment(Pos.CENTER);
-        // Fallback style
         label.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; -fx-border-color: #ccc;");
         return label;
     }

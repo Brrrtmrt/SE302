@@ -22,6 +22,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.ResourceBundle;
@@ -52,6 +53,7 @@ public class MainViewController implements Initializable {
     private HashMap<Course, ClassRoom> finalRoomMap = new HashMap<>();
 
     @FXML private Spinner<Integer> intervalSpinner;
+    @FXML private Spinner<Integer> daysSpinner;
 
 
 
@@ -67,6 +69,13 @@ public class MainViewController implements Initializable {
 
         intervalSpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
             scheduleView.setSlotDuration(newVal);
+        });
+
+        SpinnerValueFactory<Integer> daysFactory =
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 14, 5, 1);
+        daysSpinner.setValueFactory(daysFactory);
+        daysSpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
+            scheduleView.setDayCount(newVal); // Update Grid immediately
         });
 
         //scheduleView.addLesson("HERAHNGI BI DERS", 0, 0, Color.GRAY);
@@ -258,20 +267,17 @@ public class MainViewController implements Initializable {
         }
 
         System.out.println("Starting Scheduler Algorithm...");
-
         Core.Scheduler scheduler = new Core.Scheduler();
-
         int stepSize = intervalSpinner.getValue();
-        scheduler.loadData(allCourses, allClassrooms, stepSize);
 
-        scheduler.generate_schedule(false);
+        scheduler.loadData(allCourses, allClassrooms, stepSize);
+        scheduler.generate_schedule(false); // Run Logic
 
         HashMap<Course, Integer> calculatedSchedule = scheduler.getSchedule();
-        HashMap<Course, ClassRoom> calculatedRooms = scheduler.getRoomAssignments();
         ArrayList<Helpers.TimeSlot> timeSlots = scheduler.getActiveTimeSlots();
+        HashMap<Course, ClassRoom> calculatedRooms = scheduler.getRoomAssignments();
 
         if (calculatedSchedule == null || calculatedSchedule.isEmpty()) {
-            System.out.println("Scheduler could not find a solution or was stopped!");
             return;
         }
 
@@ -280,44 +286,49 @@ public class MainViewController implements Initializable {
         finalSlotMap.clear();
         finalRoomMap.clear();
 
+        // Get visual settings
+        int startHour = 8; // Or use startHourSpinner.getValue() if you added it
+
+        // Use "Today" as the anchor, since Scheduler uses LocalDate.now()
+        java.time.LocalDate startDate = java.time.LocalDate.now();
+
         for (var entry : calculatedSchedule.entrySet()) {
             Course course = entry.getKey();
             int slotID = entry.getValue();
-
             Helpers.TimeSlot ts = timeSlots.get(slotID);
             ClassRoom assignedRoom = calculatedRooms.get(course);
 
-            int dayIndex = ts.getDate().getDayOfWeek().getValue() - 1;
+            // --- CHANGED LOGIC FOR DATE HEADERS ---
+            // Calculate how many days pass between Today and the Exam Date
+            long daysDiff = ChronoUnit.DAYS.between(startDate, ts.getDate());
+            int dayIndex = (int) daysDiff;
 
+            // Calculate Row Index
             long minutesFromStart = java.time.Duration.between(
-                    java.time.LocalTime.of(8, 30),
+                    java.time.LocalTime.of(startHour, 30),
                     ts.getTime()
             ).toMinutes();
-
             int timeIndex = (int) (minutesFromStart / stepSize);
 
-            if (dayIndex < 0) dayIndex = 0;
-            if (timeIndex < 0) timeIndex = 0;
-
-            scheduleView.addLesson(
-                    course.getID(),
-                    dayIndex,
-                    timeIndex,
-                    Color.LIGHTBLUE
-            );
-
-            finalSchedule.put(course, slotID);
-            if (assignedRoom != null) {
-                finalRoomMap.put(course, assignedRoom);
+            // Only add if within view (e.g. if Index is -1 or > totalDays, skip)
+            if (dayIndex >= 0 && timeIndex >= 0) {
+                scheduleView.addLesson(
+                        course.getID(),
+                        dayIndex,
+                        timeIndex,
+                        Color.LIGHTBLUE
+                );
             }
 
-            String dateStr = ts.getDate().toString();
-            String startStr = ts.getTime().toString();
-            String endStr = ts.getTime().plusMinutes(stepSize).toString();
-
-            finalSlotMap.put(slotID, new String[]{dateStr, startStr, endStr});
+            // Export Data
+            finalSchedule.put(course, slotID);
+            if (assignedRoom != null) finalRoomMap.put(course, assignedRoom);
+            finalSlotMap.put(slotID, new String[]{
+                    ts.getDate().toString(),
+                    ts.getTime().toString(),
+                    ts.getTime().plusMinutes(stepSize).toString()
+            });
         }
-
         System.out.println("Optimal Schedule Generated & Displayed.");
     }
 
