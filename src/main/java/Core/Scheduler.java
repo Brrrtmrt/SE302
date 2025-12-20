@@ -16,7 +16,7 @@ import static Tests.Debug.*;
 public class Scheduler {
 
 
-        Scheduler() {
+        public Scheduler() {
         }
 
         //course names Ex:CE 323,EEE 242...
@@ -49,10 +49,10 @@ public class Scheduler {
         public void init(Path classroom, Path cour_path, Path attendance_path, int stepsize) {
 
                 //      These are imported and set  from JavaFX
-                this.classrooms = Importer.importClassRooms(classroom);
-                this.courses = Importer.importCourses(cour_path);
+                //this.classrooms = Importer.importClassRooms(classroom);
+                //this.courses = Importer.importCourses(cour_path);
                 ArrayList<Course> attendance_list = Importer.importAttandenceLists(attendance_path);
-                this.total_rooms = this.classrooms.size();
+                //this.total_rooms = this.classrooms.size();
                 //
 
                 TimeSlot.setStep_size_t(stepsize);
@@ -61,6 +61,31 @@ public class Scheduler {
                 //      schedule is created on generate_schedule
                 this.mp = Graph.createGraph(attendance_list);
 
+        }
+
+        public void loadData(ArrayList<Course> courses, ArrayList<ClassRoom> classrooms, int stepsize) {
+                this.courses = courses;
+                this.classrooms = classrooms;
+                this.total_rooms = classrooms.size();
+
+                TimeSlot.setStep_size_t(stepsize);
+                this.slotIds = TimeSlot.set_time_slots();
+
+                // Ensure your courses have student IDs loaded before this step!
+                this.mp = Graph.createGraph(courses);
+        }
+
+        // 3. ADD GETTERS: To retrieve results for the GUI
+        public HashMap<Course, Integer> getSchedule() {
+                return this.schedule;
+        }
+
+        public ArrayList<TimeSlot> getActiveTimeSlots() {
+                return this.active_timeslots;
+        }
+
+        public HashMap<Course, ClassRoom> getRoomAssignments() {
+                return this.roomAssignments;
         }
 
         private void assignRooms() {

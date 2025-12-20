@@ -240,40 +240,58 @@ public class MainViewController implements Initializable {
     //WHEN THE USER PRESSES CREATE THE MOST OPTIMAL TIMETABLE(SCHEDULE)
     @FXML
     void handleCreateSchedule(ActionEvent event) {
-        // check
         if (allCourses.isEmpty() || allClassrooms.isEmpty()) {
             System.out.println("Error: Please import Courses and Classrooms first!");
             return;
         }
 
-        System.out.println("Generating Schedule...");
+        System.out.println("Starting Scheduler Algorithm...");
 
-        // clear old data
+        Core.Scheduler scheduler = new Core.Scheduler();
+
+
+        scheduler.loadData(allCourses, allClassrooms, 60);
+
+
+        scheduler.generate_schedule(false);
+
+        // 4. Retrieve Results
+        HashMap<Course, Integer> calculatedSchedule = scheduler.getSchedule();
+        HashMap<Course, ClassRoom> calculatedRooms = scheduler.getRoomAssignments();
+        ArrayList<Helpers.TimeSlot> timeSlots = scheduler.getActiveTimeSlots();
+
+        if (calculatedSchedule == null || calculatedSchedule.isEmpty()) {
+            System.out.println("Scheduler could not find a solution or was stopped!");
+            return;
+        }
+
+
+        scheduleView.clearLessons();
         finalSchedule.clear();
         finalSlotMap.clear();
         finalRoomMap.clear();
 
-        scheduleView.clearLessons();
 
-        // algorithm
-        int dayIndex = 0;
-        int timeIndex = 0;
+        for (var entry : calculatedSchedule.entrySet()) {
+            Course course = entry.getKey();
+            int slotID = entry.getValue();
 
-        for (Course course : allCourses) {
-            // logic
-            int slotID = (dayIndex * 10) + timeIndex;
+            // Get the actual TimeSlot object
+            Helpers.TimeSlot ts = timeSlots.get(slotID);
+            ClassRoom assignedRoom = calculatedRooms.get(course);
 
-            // VERY IMPORTANT SAVING TO THE MEMORY
-            finalSchedule.put(course, slotID);
 
-            if (!allClassrooms.isEmpty()) {
-                finalRoomMap.put(course, allClassrooms.get(0));
-            }
 
-            String timeString = String.format("%02d:30", 8 + timeIndex);
-            finalSlotMap.put(slotID, new String[]{"2025-06-15", timeString, "10:30"});
+            // Day: Convert Date to Grid Column (0=Mon, 1=Tue...)
+            int dayIndex = ts.getDate().getDayOfWeek().getValue() - 1;
 
-            // VISUAL DISPLAY
+
+            int timeIndex = ts.getTime().getHour() - 8;
+
+            // Safety check for indices
+            if (dayIndex < 0) dayIndex = 0;
+            if (timeIndex < 0) timeIndex = 0;
+
             scheduleView.addLesson(
                     course.getID(),
                     dayIndex,
@@ -281,15 +299,20 @@ public class MainViewController implements Initializable {
                     Color.LIGHTBLUE
             );
 
-            timeIndex++;
-            if (timeIndex > 6) {
-                timeIndex = 0;
-                dayIndex++;
+            finalSchedule.put(course, slotID);
+            if (assignedRoom != null) {
+                finalRoomMap.put(course, assignedRoom);
             }
-            if (dayIndex > 4) dayIndex = 0;
+
+
+            String dateStr = ts.getDate().toString();
+            String startStr = ts.getTime().toString();
+            String endStr = ts.getTime().plusMinutes(60).toString();
+
+            finalSlotMap.put(slotID, new String[]{dateStr, startStr, endStr});
         }
 
-        System.out.println("Schedule Generated. Ready to Export.");
+        System.out.println("Optimal Schedule Generated & Displayed.");
     }
 
     @FXML
