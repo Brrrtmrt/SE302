@@ -77,4 +77,17 @@
 
         </VBox>
     </right>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" style="-fx-padding: 5; -fx-background-color: #e0e0e0; -fx-border-color: #ccc; -fx-border-width: 1 0 0 0;">
+            <children>
+                <Button fx:id="errorLogButton"
+                        mnemonicParsing="false"
+                        onAction="#handleShowErrorLog"
+                        text="Hata000"
+                        style="-fx-background-color: transparent; -fx-text-fill: red; -fx-font-weight: bold; -fx-border-color: red; -fx-border-radius: 5; -fx-cursor: hand;" />
+            </children>
+        </HBox>
+    </bottom>
+
 </BorderPane>
