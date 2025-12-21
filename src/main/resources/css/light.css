@@ -15,6 +15,6 @@
 
 .schedule-header {
     -fx-background-color: #e0e0e0; /* Original Light Gray */
-    -fx-text-fill: black;          /* Black text */
+    -fx-text-fill: black; /* Black text */
     -fx-border-color: #cccccc;
 }

@@ -340,7 +340,8 @@ public class MainViewController implements Initializable {
                                                 cellText,
                                                 dayIndex,
                                                 startIndex + i,
-                                                Color.LIGHTBLUE // Changed to standard color or variable
+
+                                                Color.DARKBLUE // Changed to standard color or variable
                                         );
                                 }
                         }
@@ -420,16 +421,30 @@ public class MainViewController implements Initializable {
         @FXML
         void handleManuel(ActionEvent event) {
                 try {
+                        // 1. Try finding it in the current working directory (Common)
                         File manualFile = new File("UserManual.pdf");
-                        if (Desktop.isDesktopSupported() && manualFile.exists()) {
+
+                        // 2. If not found, try the 'app' folder (Standard jpackage structure)
+                        if (!manualFile.exists()) {
+                                manualFile = new File("app/UserManual.pdf");
+                        }
+
+                        // 3. If still not found, try 'docs' folder (IntelliJ Development environment)
+                        if (!manualFile.exists()) {
+                                manualFile = new File("docs/UserManual.pdf");
+                        }
+
+                        // 4. Open the file if we found it
+                        if (manualFile.exists() && Desktop.isDesktopSupported()) {
                                 Desktop.getDesktop().open(manualFile);
                         } else {
-                                ErrorHandler.getInstance().logError("Hata, Kullanım kılavuzu bulunamadı.");
-                                showAlert("Hata", "Kullanım kılavuzu bulunamadı (UserManual.pdf).");
+                                ErrorHandler.getInstance().logError("Hata, Kullanım kılavuzu bulunamadı: " + manualFile.getAbsolutePath());
+                                showAlert("Hata", "Kullanım kılavuzu bulunamadı.\n(Aranan son konum: " + manualFile.getAbsolutePath() + ")");
                         }
+
                 } catch (IOException e) {
-                        ErrorHandler.getInstance().logError("Hata, Kullanım kılavuzu açılamadı: ");
-                        showAlert("Hata", "Kullanım kılavuzu açılamadı: ");
+                        ErrorHandler.getInstance().logError("Hata, Dosya açılırken sorun oluştu: " + e.getMessage());
+                        showAlert("Hata", "Dosya açılamadı.");
                 }
         }
 
