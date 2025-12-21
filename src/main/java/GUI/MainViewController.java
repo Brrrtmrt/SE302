@@ -200,92 +200,104 @@ public class MainViewController implements Initializable {
             startDatePicker.setValue(startDate);
         }
 
-        scheduler.generate_schedule(userRequestedDays, startDate, false);
+        try {
 
-        // retrieve results
-        HashMap<Course, Integer> calculatedSchedule = scheduler.getSchedule();
-        ArrayList<Helpers.TimeSlot> timeSlots = scheduler.getActiveTimeSlots();
-        HashMap<Course, ClassRoom> calculatedRooms = scheduler.getRoomAssignments();
+            scheduler.generate_schedule(userRequestedDays, startDate, false);
 
-        if (calculatedSchedule == null || calculatedSchedule.isEmpty()) {
-            System.out.println("No schedule found.");
-            return;
-        }
+            // retrieve results
+            HashMap<Course, Integer> calculatedSchedule = scheduler.getSchedule();
+            ArrayList<Helpers.TimeSlot> timeSlots = scheduler.getActiveTimeSlots();
+            HashMap<Course, ClassRoom> calculatedRooms = scheduler.getRoomAssignments();
 
-        // UPDATE UI VERY IMPORTANT
-        if (!timeSlots.isEmpty()) {
-            LocalDate lastDate = timeSlots.get(timeSlots.size() - 1).getDate();
-            long actualDaysLong = ChronoUnit.DAYS.between(startDate, lastDate) + 1;
-            int actualDayCount = (int) actualDaysLong;
-
-            System.out.println("Scheduler used " + actualDayCount + " days.");
-
-            SpinnerValueFactory.IntegerSpinnerValueFactory factory =
-                    (SpinnerValueFactory.IntegerSpinnerValueFactory) daysSpinner.getValueFactory();
-
-            if (actualDayCount > factory.getMax()) {
-                factory.setMax(actualDayCount);
+            if (calculatedSchedule == null || calculatedSchedule.isEmpty()) {
+                System.out.println("No schedule found.");
+                return;
             }
 
-            if (actualDayCount != daysSpinner.getValue()) {
-                factory.setValue(actualDayCount);
-            }
-        }
+            // UPDATE UI VERY IMPORTANT
+            if (!timeSlots.isEmpty()) {
+                LocalDate lastDate = timeSlots.get(timeSlots.size() - 1).getDate();
+                long actualDaysLong = ChronoUnit.DAYS.between(startDate, lastDate) + 1;
+                int actualDayCount = (int) actualDaysLong;
 
-        // CLEAR THE OLD DATA
-        scheduleView.clearLessons();
-        finalSchedule.clear();
-        finalSlotMap.clear();
-        finalRoomMap.clear();
+                System.out.println("Scheduler used " + actualDayCount + " days.");
 
-        scheduleView.setStartDate(startDate);
+                SpinnerValueFactory.IntegerSpinnerValueFactory factory =
+                        (SpinnerValueFactory.IntegerSpinnerValueFactory) daysSpinner.getValueFactory();
 
-        int startHour = 8;
+                if (actualDayCount > factory.getMax()) {
+                    factory.setMax(actualDayCount);
+                }
 
-        // DRAW THE LESSONS (IMPORTANT)
-        for (var entry : calculatedSchedule.entrySet()) {
-            Course course = entry.getKey();
-            int slotID = entry.getValue();
-            Helpers.TimeSlot ts = timeSlots.get(slotID);
-            ClassRoom assignedRoom = calculatedRooms.get(course);
-
-            long daysDiff = ChronoUnit.DAYS.between(startDate, ts.getDate());
-            int dayIndex = (int) daysDiff;
-
-            long minutesFromStart = java.time.Duration.between(
-                    java.time.LocalTime.of(startHour, 30),
-                    ts.getTime()
-            ).toMinutes();
-            int startIndex = (int) (minutesFromStart / stepSize);
-
-            int duration = course.getDuration();
-            int slotsSpan = (int) Math.ceil((double) duration / stepSize);
-
-            if (dayIndex >= 0 && startIndex >= 0) {
-                for (int i = 0; i < slotsSpan; i++) {
-                    String cellText = course.getID();
-                    if (assignedRoom != null) {
-                        cellText += "\n" + assignedRoom.getName();
-                    }
-
-                    scheduleView.addLesson(
-                            cellText,
-                            dayIndex,
-                            startIndex + i,
-                            Color.DARKBLUE
-                    );
+                if (actualDayCount != daysSpinner.getValue()) {
+                    factory.setValue(actualDayCount);
                 }
             }
 
-            finalSchedule.put(course, slotID);
-            if (assignedRoom != null) finalRoomMap.put(course, assignedRoom);
-            finalSlotMap.put(slotID, new String[]{
-                    ts.getDate().toString(),
-                    ts.getTime().toString(),
-                    ts.getTime().plusMinutes(duration).toString()
-            });
+            // CLEAR THE OLD DATA
+            scheduleView.clearLessons();
+            finalSchedule.clear();
+            finalSlotMap.clear();
+            finalRoomMap.clear();
+
+            scheduleView.setStartDate(startDate);
+
+            int startHour = 8;
+
+            // DRAW THE LESSONS (IMPORTANT)
+            for (var entry : calculatedSchedule.entrySet()) {
+                Course course = entry.getKey();
+                int slotID = entry.getValue();
+                Helpers.TimeSlot ts = timeSlots.get(slotID);
+                ClassRoom assignedRoom = calculatedRooms.get(course);
+
+                long daysDiff = ChronoUnit.DAYS.between(startDate, ts.getDate());
+                int dayIndex = (int) daysDiff;
+
+                long minutesFromStart = java.time.Duration.between(
+                        java.time.LocalTime.of(startHour, 30),
+                        ts.getTime()
+                ).toMinutes();
+                int startIndex = (int) (minutesFromStart / stepSize);
+
+                int duration = course.getDuration();
+                int slotsSpan = (int) Math.ceil((double) duration / stepSize);
+
+                if (dayIndex >= 0 && startIndex >= 0) {
+                    for (int i = 0; i < slotsSpan; i++) {
+                        String cellText = course.getID();
+                        if (assignedRoom != null) {
+                            cellText += "\n" + assignedRoom.getName();
+                        }
+
+                        scheduleView.addLesson(
+                                cellText,
+                                dayIndex,
+                                startIndex + i,
+                                Color.DARKBLUE
+                        );
+                    }
+                }
+
+                finalSchedule.put(course, slotID);
+                if (assignedRoom != null) finalRoomMap.put(course, assignedRoom);
+                finalSlotMap.put(slotID, new String[] {
+                        ts.getDate().toString(),
+                        ts.getTime().toString(),
+                        ts.getTime().plusMinutes(duration).toString()
+                });
+            }
+            System.out.println("Optimal Schedule Generated & Displayed.");
+
+        } catch (Core.SchedulingException e) {
+            //Catch the custom scheduling exceptions
+            showErrorAlert("Scheduling Failed", e.getMessage(), e.getErrorDetail());
+        } catch (Exception e) {
+            //Catch any other exception
+            e.printStackTrace();
+            showErrorAlert("System error", "An unexpected error occured", "Error" + e.toString() + "\nPlease check the console for details.");
         }
-        System.out.println("Optimal Schedule Generated & Displayed.");
+
     }
 
     @FXML
