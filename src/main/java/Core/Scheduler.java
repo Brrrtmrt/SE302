@@ -123,7 +123,11 @@ public class Scheduler {
                 this.mp = Graph.createGraph(this.courses);
         }
 
-        public void generate_schedule(int initialDays, LocalDate startDate, boolean skip_weekend) {
+        public void generate_schedule(int initialDays, LocalDate startDate, boolean skip_weekend) throws SchedulingException {
+
+                if (this.courses.isEmpty() || this.classrooms.isEmpty()) {
+                        throw new SchedulingException("Missing Data", "No courses or classrooms loaded. Please import data first.");
+                }
 
                 // 1. Sort Courses (Hardest first)
                 this.courses.sort((c1, c2) -> {
@@ -170,6 +174,13 @@ public class Scheduler {
                                 days++;
                                 currentDayRetries = 0;
                                 continue;
+                        }
+
+                        if (days > initialDays + 30) {
+                                throw new SchedulingException("Schedule unfeasible", "The algorithm could not find a valid solution within a reasonable time.\n" +
+                                        "This usually happens due to:\n" +
+                                        "1. Too many conflicts for the available rooms.\n" +
+                                        "2. Exams duration exceeding day limits.");
                         }
 
                         try {
@@ -368,16 +379,26 @@ public class Scheduler {
                 Path cour = Path.of("docs\\sampleData_AllCoursesWithTime.csv");
                 Path att = Path.of("docs\\sampleData_AllAttendanceLists.csv");
                 scheduler.init(croom, cour, att, 55);
-                scheduler.generate_schedule(5, LocalDate.of(2025, 12, 15), false);
-                StudentProgramExtractor extractor = new StudentProgramExtractor(
-                scheduler.getSchedule(), 
-                scheduler.getActiveTimeSlots()
-                );
 
-                // 2. Get exams for a specific student
-                List<String> myExams = extractor.getExamsForStudent("Std_ID_001");
-                System.out.println("Exams for Std_ID_001: " + myExams);
+                try {
+                        // Try to generate schedule
+                        scheduler.generate_schedule(5, LocalDate.of(2025, 12, 15), false);
 
-              
+                        // If successful this runs
+                        StudentProgramExtractor extractor = new StudentProgramExtractor(
+                                scheduler.getSchedule(),
+                                scheduler.getActiveTimeSlots()
+                        );
+
+                        // 2. Get exams for a specific student
+                        List<String> myExams = extractor.getExamsForStudent("Std_ID_001");
+                        System.out.println("Exams for Std_ID_001: " + myExams);
+
+                } catch (SchedulingException e) {
+                        System.err.println(">>> SCHEDULE GENERATION FAILED <<<");
+                        System.err.println("Error: " + e.getMessage());
+                        System.err.println("Details: " + e.getErrorDetail());
+                }
+
         }
 }
