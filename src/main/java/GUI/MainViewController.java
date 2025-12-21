@@ -340,7 +340,8 @@ public class MainViewController implements Initializable {
                                                 cellText,
                                                 dayIndex,
                                                 startIndex + i,
-                                                Color.LIGHTBLUE // Changed to standard color or variable
+
+                                                Color.DARKBLUE // Changed to standard color or variable
                                         );
                                 }
                         }

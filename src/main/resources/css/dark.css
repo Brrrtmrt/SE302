@@ -1,10 +1,10 @@
 /* --- GLOBAL BASE SETTINGS --- */
 .root {
-    -fx-base: #2b2b2b;              /* The base color for buttons/backgrounds */
-    -fx-background-color: #2b2b2b;  /* Main background */
+    -fx-base: #2b2b2b; /* The base color for buttons/backgrounds */
+    -fx-background-color: #2b2b2b; /* Main background */
     -fx-control-inner-background: #3c3f41; /* Inputs/Lists background */
-    -fx-text-fill: white;           /* Default text color */
-    -fx-focus-color: #010147;       /* Blue outline when clicked */
+    -fx-text-fill: white; /* Default text color */
+    -fx-focus-color: #0096C9; /* Blue outline when clicked */
     -fx-faint-focus-color: #0096C922;
 }
 
@@ -18,7 +18,7 @@
 /* --- SIDEBAR --- */
 .sidebar {
     -fx-background-color: #333333; /* Slightly lighter than root for contrast */
-    -fx-border-color: #444444;     /* Subtle border separator */
+    -fx-border-color: #444444; /* Subtle border separator */
 }
 
 /* --- LIST VIEWS --- */
@@ -33,8 +33,13 @@
 }
 
 /* Zebra striping for easier reading */
-.list-cell:even { -fx-background-color: #3c3f41; }
-.list-cell:odd  { -fx-background-color: #424547; }
+.list-cell:even {
+    -fx-background-color: #3c3f41;
+}
+
+.list-cell:odd {
+    -fx-background-color: #424547;
+}
 
 /* Fixes the "White Space" at the bottom of empty lists */
 .list-cell:empty {
@@ -43,7 +48,7 @@
 
 /* The color when you select an item */
 .list-cell:filled:selected:focused, .list-cell:filled:selected {
-    -fx-background-color: #010147; /* Bright Blue */
+    -fx-background-color: #0096C9; /* Bright Blue */
     -fx-text-fill: white;
 }
 
@@ -56,7 +61,7 @@
 
 .spinner .text-field {
     -fx-background-color: #3c3f41; /* Dark background for the number box */
-    -fx-text-fill: white;           /* White numbers */
+    -fx-text-fill: white; /* White numbers */
 }
 
 /* Style the arrow buttons on the spinner */
@@ -64,10 +69,12 @@
 .spinner .decrement-arrow-button {
     -fx-body-color: #444444;
 }
+
 .spinner .increment-arrow-button:hover,
 .spinner .decrement-arrow-button:hover {
     -fx-body-color: #555555;
 }
+
 /* Make the tiny arrows inside the buttons white */
 .spinner .increment-arrow,
 .spinner .decrement-arrow {
@@ -80,9 +87,11 @@
     -fx-border-color: #444444;
     -fx-border-width: 0 0 1 0;
 }
+
 .menu-item .label {
     -fx-text-fill: white;
 }
+
 .context-menu {
     -fx-background-color: #333333;
     -fx-border-color: #555555;
@@ -91,6 +100,6 @@
 /* --- SCHEDULE GRID HEADERS --- */
 .schedule-header {
     -fx-background-color: #444444; /* Dark Gray */
-    -fx-text-fill: white;          /* White text */
+    -fx-text-fill: white; /* White text */
     -fx-border-color: #555555;
 }

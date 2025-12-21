@@ -80,7 +80,7 @@ public class ScheduleView extends GridPane {
             this.getColumnConstraints().add(dayCol);
         }
 
-        this.add(createHeaderLabel("Time"), 0, 0);
+        this.add(createHeaderLabel("Saat/Tarih"), 0, 0);
 
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy EEE", new Locale("tr", "TR"));
 
