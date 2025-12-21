@@ -10,38 +10,108 @@ import IO.Importer;
 
 import static Tests.Debug.*;
 
-
+/**
+ * Scheduler is responsible for generating an exam schedule given rooms, courses,
+ * and attendance lists. It performs constraint checks (student conflicts,
+ * room capacities, maximum exams per day) and uses a randomized backtracking
+ * solver with occasional randomized restarts.
+ *
+ * <p>The primary entry points for external use are:
+ * <ul>
+ *     <li>`loadData` — supply preloaded lists of courses and classrooms</li>
+ *     <li>`generate_schedule` — attempt to build a valid schedule starting at a date</li>
+ * </ul>
+ *
+ * <p>Internal algorithm details:
+ * <ul>
+ *     <li>Courses are sorted by degree (conflicts) and enrollment size to schedule hardest first.</li>
+ *     <li>A randomized solver assigns courses to shuffled time slots with backtracking.</li>
+ *     <li>If the solver becomes "stuck", a randomized restart is thrown and retried up to a per-day limit.</li>
+ * </ul>
+ */
 public class Scheduler {
 
-        private final Random random = new Random();
+        private static final Random random = new Random();
+
+        /**
+         * Threshold for random level at which the solver will trigger a random restart.
+         * Calculated at runtime and bounded by {@link #MAX_LEVEL_CAP}.
+         */
         private int THROW_THRESHOLD;
+        /**
+         * Upper bound for random level generator to avoid infinite loops.
+         */
+
         private final int MAX_LEVEL_CAP = 20;
 
-        // FAIL FAST CONFIGURATION
-        // If 5 random shuffles fail, assume the day count is impossible.
+        /**
+         * Maximum number of randomized restart retries per tested number of days
+         * before the algorithm increases the days and continues.
+         */
         private final int MAX_RETRIES_PER_DAY = 5;
 
         public Scheduler() {
         }
 
+        /**
+         * List of courses to schedule.
+         */
         private ArrayList<Course> courses;
+
+        /**
+         * List of permitted start times identifiers produced by TimeSlot.
+         */
         private ArrayList<LocalTime> slotIds;
+
+        /**
+         * Flattened list of time slot indices currently considered (shuffled).
+         */
         private ArrayList<Integer> slots;
+
+        /**
+         * Resulting mapping from Course to assigned slot index.
+         */
         private HashMap<Course, Integer> schedule;
+
+        /**
+         * Conflict graph representation mapping a Course to neighboring Courses
+         * that share students and therefore cannot overlap.
+         */
         private HashMap<Course, ArrayList<Course>> mp;
+
+        /**
+         * Total number of available rooms.
+         */
         private int total_rooms;
+
+        /**
+         * List of classrooms available for assignment.
+         */
         private ArrayList<ClassRoom> classrooms;
+
+        /**
+         * Active timeslots generated for the current scheduling attempt.
+         */
         private ArrayList<TimeSlot> active_timeslots;
+
+        /**
+         * Final mapping of courses to assigned classrooms (after successful scheduling).
+         */
         private HashMap<Course, ClassRoom> roomAssignments;
 
 
+        /**
+         * Calculates the optimal number of start days required for scheduling.
+         *
+         * @param skip_weekend Whether weekends should be skipped in the schedule.
+         * @return The optimal number of start days.
+         */
         private int calculateOptimalStartDay(boolean skip_weekend) {
                 ArrayList<TimeSlot> oneDaySlots = TimeSlot.slot_generator(1, LocalDate.now(), slotIds, skip_weekend);
                 int slotsPerDay = Math.max(1, oneDaySlots.size());
 
                 long totalCourseSlotsNeeded = 0;
                 for (Course c : this.courses) {
-                        // How many slots does this specific course need?
                         int slotsForCourse = (int) Math.ceil((double) c.getDuration() / TimeSlot.getStep_size_t());
                         totalCourseSlotsNeeded += slotsForCourse;
                 }
@@ -90,6 +160,11 @@ public class Scheduler {
                 return Math.max(1, optimalStart);
         }
 
+        /**
+         * Generates a random level for the solver algorithm.
+         *
+         * @return random level in range [0, {@link #MAX_LEVEL_CAP}]
+         */
         private int randomLevel() {
                 int lvl = 0;
                 while (random.nextBoolean() && lvl < MAX_LEVEL_CAP) {
@@ -98,7 +173,16 @@ public class Scheduler {
                 return lvl;
         }
 
-        public void init(Path classroom, Path cour_path, Path attendance_path, int stepsize) {
+        /**
+         * Initializes the scheduler with classroom, course, and attendance data.
+         * Actual method for this is on GUI part.
+         *
+         * @param classroom       Path to the file containing classroom data.
+         * @param cour_path       Path to the file containing course data.
+         * @param attendance_path Path to the file containing attendance data.
+         * @param stepsize        The step size for time slots.
+         */
+        private void init(Path classroom, Path cour_path, Path attendance_path, int stepsize) {
                 this.classrooms = Importer.importClassRooms(classroom);
                 this.courses = Importer.importCourses(cour_path);
                 ArrayList<Course> attendance_list = Importer.importAttandenceLists(attendance_path);
@@ -123,11 +207,14 @@ public class Scheduler {
                 this.mp = Graph.createGraph(this.courses);
         }
 
-        public void generate_schedule(int initialDays, LocalDate startDate, boolean skip_weekend) throws SchedulingException {
-
-                if (this.courses.isEmpty() || this.classrooms.isEmpty()) {
-                        throw new SchedulingException("Missing Data", "No courses or classrooms loaded. Please import data first.");
-                }
+        /**
+         * Generates a schedule for the courses, ensuring all constraints are met.
+         *
+         * @param initialDays  The initial number of days to consider for scheduling.(If too low, it will automatically set to valid number of days)
+         * @param startDate    The start date for the schedule.
+         * @param skip_weekend Whether weekends should be skipped in the schedule.
+         */
+        public void generate_schedule(int initialDays, LocalDate startDate, boolean skip_weekend) {
 
                 // 1. Sort Courses (Hardest first)
                 this.courses.sort((c1, c2) -> {
@@ -193,7 +280,6 @@ public class Scheduler {
                                         }
                                         return;
                                 } else {
-                                        // Natural Failure (Exhausted options)
                                         schedule.clear();
                                         days++;
                                         currentDayRetries = 0;
@@ -217,6 +303,16 @@ public class Scheduler {
                 }
         }
 
+        /**
+         * Recursively attempts to assign slots to courses using backtracking.
+         * <p>
+         * Test slots on each call.
+         * If randomLevel() exceeds THROW_THRESHOLD,to restart randomly
+         * RuntimeException("RANDOM_RESTART") is thrown.
+         *
+         * @param courseIndex index of the course to assign next
+         * @return true if remaining courses were successfully scheduled, false otherwise
+         */
         boolean solver(int courseIndex) {
 
                 if (randomLevel() >= THROW_THRESHOLD) {
@@ -243,6 +339,15 @@ public class Scheduler {
                 return false;
         }
 
+        /**
+         * Determines whether two time intervals overlap on the same date.
+         *
+         * @param slotA     first TimeSlot
+         * @param durationA duration of the first course in minutes
+         * @param slotB     second TimeSlot
+         * @param durationB duration of the second course in minutes
+         * @return true if the two intervals overlap
+         */
         private boolean isTimeOverlap(TimeSlot slotA, int durationA, TimeSlot slotB, int durationB) {
                 if (!slotA.getDate().equals(slotB.getDate())) return false;
                 LocalTime startA = slotA.getTime();
@@ -254,7 +359,11 @@ public class Scheduler {
                 return startA.isBefore(endB) && startB.isBefore(endA);
         }
 
-
+        /**
+         * Print formatted schedule to stdout for debugging.
+         *
+         * @param curr list of active TimeSlot instances matching slot indices used in {@code schedule}
+         */
         private void printSchedule(ArrayList<TimeSlot> curr) {
                 for (var entry : schedule.entrySet()) {
                         Course c = entry.getKey();
@@ -263,12 +372,20 @@ public class Scheduler {
                         ClassRoom room = roomAssignments.get(c);
                         LocalTime start = rt.getTime();
                         LocalTime end = start.plusMinutes(c.getDuration());
-                        System.out.println(String.format("%-10s -> %s %s - %s [Room: %s]",
+                        System.out.printf("%-10s -> %s %s - %s [Room: %s]%n",
                                 c.getID(), rt.getDate(), start, end,
-                                (room != null ? room.getName() : "N/A")));
+                                (room != null ? room.getName() : "N/A"));
                 }
         }
 
+        /**
+         * Load data directly from collections instead of files.
+         * For GUI code.
+         *
+         * @param courses    list of courses to schedule
+         * @param classrooms list of available classrooms
+         * @param stepsize   time step size in minutes
+         */
         public void loadData(ArrayList<Course> courses, ArrayList<ClassRoom> classrooms, int stepsize) {
                 this.courses = courses;
                 this.classrooms = classrooms;
@@ -290,6 +407,10 @@ public class Scheduler {
                 return this.roomAssignments;
         }
 
+        /**
+         * Assign classrooms to scheduled courses for each slot, matching largest courses
+         * to the largest rooms to maximize feasibility.
+         */
         private void assignRooms() {
                 this.roomAssignments = new HashMap<>();
                 HashMap<Integer, ArrayList<Course>> coursesBySlot = new HashMap<>();
@@ -314,6 +435,14 @@ public class Scheduler {
                 }
         }
 
+        /**
+         * Check if placing {@code current} into {@code slot} violates student-overlap constraints
+         * using the course conflict graph {@link #mp}.
+         *
+         * @param current        course to test
+         * @param proposedSlotId slot index to test
+         * @return true if no conflicts detected
+         */
         private boolean checkStudentConflicts(Course current, int proposedSlotId) {
                 ArrayList<Course> neighbors = mp.get(current);
                 if (neighbors == null || neighbors.isEmpty()) return true;
@@ -330,7 +459,15 @@ public class Scheduler {
                 return true;
         }
 
-        boolean checkRoomCapacity(Course course, int slot) {
+        /**
+         * Check whether adding {@code course} into {@code slot} will exceed available room
+         * capacity either by count or by room size.
+         *
+         * @param course course to test
+         * @param slot   slot index to test
+         * @return true if capacity constraints are satisfied
+         */
+        private boolean checkRoomCapacity(Course course, int slot) {
                 ArrayList<Course> coursesInSlot = new ArrayList<>();
                 coursesInSlot.add(course);
                 TimeSlot proposedTS = active_timeslots.get(slot);
@@ -355,7 +492,15 @@ public class Scheduler {
                 return true;
         }
 
-        boolean checkMaxStudentsPerDay(Course course, int slot) {
+        /**
+         * Ensure that no student in {@code course} will have more than 2 exams on the
+         * target date if this course is placed in {@code slot}.
+         *
+         * @param course course to test
+         * @param slot   slot index to test
+         * @return true if the per-day student exam limit is not exceeded
+         */
+        private boolean checkMaxStudentsPerDay(Course course, int slot) {
                 LocalDate targetDate = active_timeslots.get(slot).getDate();
                 HashSet<String> studentsInCurrentCourse = course.getEnrolledStudentIDs();
                 for (String studentID : studentsInCurrentCourse) {
@@ -371,34 +516,5 @@ public class Scheduler {
                         if (examsToday >= 2) return false;
                 }
                 return true;
-        }
-
-        public static void main(String[] args) {
-                Scheduler scheduler = new Scheduler();
-                Path croom = Path.of("docs\\sampleData_AllClassroomsAndTheirCapacities.csv");
-                Path cour = Path.of("docs\\sampleData_AllCoursesWithTime.csv");
-                Path att = Path.of("docs\\sampleData_AllAttendanceLists.csv");
-                scheduler.init(croom, cour, att, 55);
-
-                try {
-                        // Try to generate schedule
-                        scheduler.generate_schedule(5, LocalDate.of(2025, 12, 15), false);
-
-                        // If successful this runs
-                        StudentProgramExtractor extractor = new StudentProgramExtractor(
-                                scheduler.getSchedule(),
-                                scheduler.getActiveTimeSlots()
-                        );
-
-                        // 2. Get exams for a specific student
-                        List<String> myExams = extractor.getExamsForStudent("Std_ID_001");
-                        System.out.println("Exams for Std_ID_001: " + myExams);
-
-                } catch (SchedulingException e) {
-                        System.err.println(">>> SCHEDULE GENERATION FAILED <<<");
-                        System.err.println("Error: " + e.getMessage());
-                        System.err.println("Details: " + e.getErrorDetail());
-                }
-
         }
 }

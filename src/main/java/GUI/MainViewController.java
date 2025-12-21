@@ -11,6 +11,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField; // Added Import
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -30,38 +31,44 @@ public class MainViewController implements Initializable {
 
     @FXML private BorderPane mainContainer;
 
-    // visual lists
+    // --- VISUAL LISTS ---
     @FXML private ListView<String> studentList;
     @FXML private ListView<String> courseList;
     @FXML private ListView<String> classroomList;
     @FXML private ListView<String> attendanceList;
 
-    // data
+    // --- DATA STORAGE ---
     private ArrayList<Student> allStudents = new ArrayList<>();
     private ArrayList<Course> allCourses = new ArrayList<>();
     private ArrayList<ClassRoom> allClassrooms = new ArrayList<>();
     private ArrayList<Course> allAttendance = new ArrayList<>();
 
-    // state & views
+    // --- STATE & VIEWS ---
     private boolean isDarkModeOn = false;
     private ScheduleView scheduleView;
 
-    // export data
+    // --- EXPORT DATA ---
     private HashMap<Course, Integer> finalSchedule = new HashMap<>();
     private HashMap<Integer, String[]> finalSlotMap = new HashMap<>();
     private HashMap<Course, ClassRoom> finalRoomMap = new HashMap<>();
+    
+    // NEW: Store time slots for search functionality
+    private ArrayList<Helpers.TimeSlot> generatedTimeSlots;
 
-    // controls
+    // --- CONTROLS ---
     @FXML private Spinner<Integer> intervalSpinner;
     @FXML private Spinner<Integer> daysSpinner;
     @FXML private DatePicker startDatePicker;
+    
+    // NEW: Search Field
+    @FXML private TextField studentIdField;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        //Initialize ScheduleView
+        // 1. Initialize ScheduleView
         scheduleView = new ScheduleView();
 
-        //Setup Interval Spinner (Time Slots)
+        // 2. Setup Interval Spinner (Time Slots)
         SpinnerValueFactory<Integer> valueFactory =
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(15, 120, 60, 15);
         intervalSpinner.setValueFactory(valueFactory);
@@ -69,7 +76,7 @@ public class MainViewController implements Initializable {
             scheduleView.setSlotDuration(newVal);
         });
 
-        //Setup Days Spinner (Total Days)
+        // 3. Setup Days Spinner (Total Days)
         SpinnerValueFactory<Integer> daysFactory =
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 14, 5, 1);
         daysSpinner.setValueFactory(daysFactory);
@@ -77,20 +84,17 @@ public class MainViewController implements Initializable {
             scheduleView.setDayCount(newVal);
         });
 
-        // Delete Buttons
+        // 4. Setup Delete Buttons
         studentList.setCellFactory(param -> new DeletableCell());
         courseList.setCellFactory(param -> new DeletableCell());
         classroomList.setCellFactory(param -> new DeletableCell());
         attendanceList.setCellFactory(param -> new DeletableCell());
 
-        //init the date picker
+        // 5. Init Date Picker
         startDatePicker.setValue(LocalDate.now());
-
-        //listener for the date picker
         startDatePicker.valueProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
                 scheduleView.setStartDate(newValue);
-
                 if (!allCourses.isEmpty() && !allClassrooms.isEmpty()) {
                     System.out.println("Date changed to " + newValue + ", regenerating schedule...");
                     handleCreateSchedule(null);
@@ -98,15 +102,14 @@ public class MainViewController implements Initializable {
             }
         });
 
-        // Layout Setup
+        // 6. Layout Setup
         mainContainer.setCenter(scheduleView);
-
         mainContainer.getStylesheets().add(getClass().getResource("/css/light.css").toExternalForm());
     }
 
     @FXML
     void importStudents(ActionEvent event){
-        File file = browseFile("Select Students CSV");
+        File file = browseFile("Öğrenci CSV dosyasını seçin");
         if (file != null) {
             ArrayList<Student> students = Importer.importStudents(file.toPath());
             this.allStudents = students;
@@ -119,7 +122,7 @@ public class MainViewController implements Initializable {
 
     @FXML
     void importCourses(ActionEvent event){
-        File file = browseFile("Select Courses CSV");
+        File file = browseFile("Ders CSV dosyasını seçin");
         if (file != null) {
             ArrayList<Course> courses = Importer.importCourses(file.toPath());
             this.allCourses = courses;
@@ -132,7 +135,7 @@ public class MainViewController implements Initializable {
 
     @FXML
     void importClassroomCapacity(ActionEvent event){
-        File file = browseFile("Select Classrooms CSV");
+        File file = browseFile("Sınıf-Kapasite CSV dosyasını seçin");
         if (file != null) {
             ArrayList<ClassRoom> rooms = Importer.importClassRooms(file.toPath());
             this.allClassrooms = rooms;
@@ -145,13 +148,10 @@ public class MainViewController implements Initializable {
 
     @FXML
     void importAttendanceList(ActionEvent event){
-        File file = browseFile("Select Attendance CSV");
+        File file = browseFile("Katılım Listesi CSV dosyasını seçin");
         if (file != null) {
             ArrayList<Course> attendanceData = Importer.importAttandenceLists(file.toPath());
-
-            // SAVE TO MEMORY
             this.allAttendance = attendanceData;
-
             attendanceList.getItems().clear();
             for (Course c : attendanceData) {
                 int count = c.getEnrolledStudentIDs().size();
@@ -170,8 +170,7 @@ public class MainViewController implements Initializable {
         System.out.println("Starting Scheduler Algorithm...");
         Core.Scheduler scheduler = new Core.Scheduler();
 
-
-
+        // MERGE ATTENDANCE
         HashMap<String, Course> courseMap = new HashMap<>();
         for (Course c : allCourses) {
             c.getEnrolledStudentIDs().clear();
@@ -186,21 +185,39 @@ public class MainViewController implements Initializable {
                 }
             }
         }
-        // ---------------------------------------------------------------------
 
-        // load data
+        // LOAD DATA
         int stepSize = intervalSpinner.getValue();
         scheduler.loadData(allCourses, allClassrooms, stepSize);
 
         int userRequestedDays = daysSpinner.getValue();
         LocalDate startDate = startDatePicker.getValue();
-
         if (startDate == null) {
             startDate = LocalDate.now();
             startDatePicker.setValue(startDate);
         }
 
         try {
+        scheduler.generate_schedule(userRequestedDays, startDate, false);
+
+        // RETRIEVE RESULTS
+        HashMap<Course, Integer> calculatedSchedule = scheduler.getSchedule();
+        ArrayList<Helpers.TimeSlot> timeSlots = scheduler.getActiveTimeSlots();
+        HashMap<Course, ClassRoom> calculatedRooms = scheduler.getRoomAssignments();
+
+        // *** CRITICAL UPDATE: SAVE TIME SLOTS FOR SEARCH ***
+        this.generatedTimeSlots = timeSlots;
+
+        if (calculatedSchedule == null || calculatedSchedule.isEmpty()) {
+            System.out.println("No schedule found.");
+            return;
+        }
+
+        // UPDATE SPINNER IF NEEDED
+        if (!timeSlots.isEmpty()) {
+            LocalDate lastDate = timeSlots.get(timeSlots.size() - 1).getDate();
+            long actualDaysLong = ChronoUnit.DAYS.between(startDate, lastDate) + 1;
+            int actualDayCount = (int) actualDaysLong;
 
             scheduler.generate_schedule(userRequestedDays, startDate, false);
 
@@ -224,6 +241,25 @@ public class MainViewController implements Initializable {
 
                 SpinnerValueFactory.IntegerSpinnerValueFactory factory =
                         (SpinnerValueFactory.IntegerSpinnerValueFactory) daysSpinner.getValueFactory();
+            if (actualDayCount != daysSpinner.getValue()) {
+                factory.setValue(actualDayCount);
+            }
+        }
+
+        // DRAW LESSONS
+        scheduleView.clearLessons();
+        finalSchedule.clear();
+        finalSlotMap.clear();
+        finalRoomMap.clear();
+        scheduleView.setStartDate(startDate);
+
+        int startHour = 8; // Assuming 8:30 start
+
+        for (var entry : calculatedSchedule.entrySet()) {
+            Course course = entry.getKey();
+            int slotID = entry.getValue();
+            Helpers.TimeSlot ts = timeSlots.get(slotID);
+            ClassRoom assignedRoom = calculatedRooms.get(course);
 
                 if (actualDayCount > factory.getMax()) {
                     factory.setMax(actualDayCount);
@@ -277,6 +313,12 @@ public class MainViewController implements Initializable {
                                 Color.DARKBLUE
                         );
                     }
+                    scheduleView.addLesson(
+                            cellText,
+                            dayIndex,
+                            startIndex + i,
+                            Color.LIGHTBLUE // Changed to standard color or variable
+                    );
                 }
 
                 finalSchedule.put(course, slotID);
@@ -300,6 +342,35 @@ public class MainViewController implements Initializable {
 
     }
 
+    // --- NEW: STUDENT SEARCH HANDLER ---
+    @FXML
+    void handleSearchStudent(ActionEvent event) {
+        String studentID = studentIdField.getText().trim();
+
+        if (studentID.isEmpty()) {
+            showAlert("Error", "Please enter a Student ID.");
+            return;
+        }
+
+        if (finalSchedule == null || finalSchedule.isEmpty() || generatedTimeSlots == null) {
+            showAlert("Error", "Lütfen önce tabloyu oluşturun.");
+            return;
+        }
+
+        Core.StudentProgramExtractor extractor = new Core.StudentProgramExtractor(finalSchedule, generatedTimeSlots);
+        java.util.List<String> exams = extractor.getExamsForStudent(studentID);
+
+        if (exams.isEmpty()) {
+            showAlert("Hata", "Öğrenci için sınav bulunamadı: " + studentID);
+        } else {
+            StringBuilder sb = new StringBuilder("Öğrenci için sınav programı " + studentID + ":\n\n");
+            for (String exam : exams) {
+                sb.append(exam).append("\n");
+            }
+            showAlert("Student Schedule", sb.toString());
+        }
+    }
+
     @FXML
     void exportTimetable(ActionEvent event) {
         if (finalSchedule.isEmpty()) {
@@ -308,7 +379,7 @@ public class MainViewController implements Initializable {
         }
 
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save Schedule");
+        fileChooser.setTitle("Tabloyu Kaydet");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
         fileChooser.setInitialFileName("OptimalSchedule.csv");
 
@@ -363,6 +434,14 @@ public class MainViewController implements Initializable {
             return fileChooser.showOpenDialog(mainContainer.getScene().getWindow());
         }
         return null;
+    }
+
+    private void showAlert(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
     // Helper class for List Delete Buttons
