@@ -9,25 +9,25 @@ public class Validator {
         //existence check
         if (Files.notExists(filePath)) {
             //ERROR LOG
-            System.out.println("File does not exist: " + filePath);
+            ErrorHandler.getInstance().logError("Dosya bulunamadı: " + filePath);
             return false;
         }
         //readable check
         if (!Files.isReadable(filePath)) {
             //ERROR LOG
-            System.out.println("File is not readable: " + filePath);
+            ErrorHandler.getInstance().logError("Dosya okunamadı: " + filePath);
             return false;
         }
         //regular file check
         if (!Files.isRegularFile(filePath)) {
             //ERROR LOG
-            System.out.println("Not a regular file: " + filePath);
+            ErrorHandler.getInstance().logError("Normal olmayan dosya: " + filePath);
             return false;
         }
-        //extansion check
+        //extension check
         if (!allowedextensions(filePath)) {
             //ERROR LOG
-            System.out.println("File has an unsupported extension: " + filePath);
+            ErrorHandler.getInstance().logError("Desteklenmeyen dosya uzantısı: " + filePath);
             return false;
         }
         //reachable check
@@ -35,7 +35,7 @@ public class Validator {
             Files.newBufferedReader(filePath).close();
         } catch (Exception e) {
             //ERROR LOG
-            System.out.println("File is not reachable: " + filePath + " - " + e.getMessage());
+            ErrorHandler.getInstance().logError("Ulaşılamayan dosya: " + filePath + " - " + e.getMessage());
             return false;
         }
         //parseable check
@@ -50,7 +50,7 @@ public class Validator {
                 // otherwise keep scanning until we find one of the delimiters
             }
         } catch (IOException e) {
-            System.out.println("Failed to detect separator for file: " + filePath + " - " + e.getMessage());
+            ErrorHandler.getInstance().logError("Ayırıcı dosya bulunamadı: " + filePath + " - " + e.getMessage());
             return false;
         }
 
@@ -66,14 +66,15 @@ public class Validator {
                     String val = columns[coulmnNum];
                     if (val == null || val.trim().isEmpty() || "null".equalsIgnoreCase(val.trim()))  {
                         //ERROR LOG
-                        System.out.println("Empty or null value in file " + filePath + " at line " + lineNum + ", column " + (coulmnNum + 1));
+                        ErrorHandler.getInstance().logError("Boş veya geçersiz(null) değer: " + filePath + ", " + lineNum + ". satır, " + (coulmnNum + 1) + ". sütun.");
                         return false;
                     }
                 }
                 lineNum++;
             }
         } catch (IOException e) {
-            System.out.println("Failed to parse file: " + filePath + " - " + e.getMessage());
+            //ERROR LOG
+            ErrorHandler.getInstance().logError("Dosya ayrıştırılamadı: " + filePath + " - " + e.getMessage());
             return false;
         }
         //all checks passed
