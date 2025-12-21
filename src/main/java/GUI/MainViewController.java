@@ -227,6 +227,7 @@ public class MainViewController implements Initializable {
     void handleCreateSchedule(ActionEvent event) {
         if (allCourses.isEmpty() || allClassrooms.isEmpty()) {
             // Kullanıcıya da görsel hata verilebilir
+            ErrorHandler.getInstance().logError("Eksik Veri, Lütfen önce Dersleri ve Sınıfları içe aktarın.");
             showAlert("Eksik Veri", "Lütfen önce Dersleri ve Sınıfları içe aktarın.");
             return;
         }
@@ -272,7 +273,7 @@ public class MainViewController implements Initializable {
         this.generatedTimeSlots = timeSlots;
 
         if (calculatedSchedule == null || calculatedSchedule.isEmpty()) {
-            System.out.println("No schedule found.");
+            ErrorHandler.getInstance().logError("Program oluşturulamadı, Verilen kısıtlarla uygun bir program bulunamadı.");
             showAlert("Program Oluşturulamadı", "Verilen kısıtlarla uygun bir program bulunamadı.");
             return;
         }
@@ -355,12 +356,14 @@ public class MainViewController implements Initializable {
         String studentID = studentIdField.getText().trim();
 
         if (studentID.isEmpty()) {
-            showAlert("Error", "Please enter a Student ID.");
+            ErrorHandler.getInstance().logError("Hata, Lütfen önce öğrenci numarası girin.");
+            showAlert("Hata", "Lütfen önce öğrenci numarası girin.");
             return;
         }
 
         if (finalSchedule == null || finalSchedule.isEmpty() || generatedTimeSlots == null) {
-            showAlert("Error", "Lütfen önce tabloyu oluşturun.");
+            ErrorHandler.getInstance().logError("Hata, Lütfen önce tabloyu oluşturun.");
+            showAlert("Hata", "Lütfen önce tabloyu oluşturun.");
             return;
         }
 
@@ -368,6 +371,7 @@ public class MainViewController implements Initializable {
         java.util.List<String> exams = extractor.getExamsForStudent(studentID);
 
         if (exams.isEmpty()) {
+            ErrorHandler.getInstance().logError("Hata, Öğrenci için sınav bulunamadı." + studentID);
             showAlert("Hata", "Öğrenci için sınav bulunamadı: " + studentID);
         } else {
             StringBuilder sb = new StringBuilder("Öğrenci için sınav programı " + studentID + ":\n\n");
@@ -381,7 +385,7 @@ public class MainViewController implements Initializable {
     @FXML
     void exportTimetable(ActionEvent event) {
         if (finalSchedule.isEmpty()) {
-            System.out.println("Error: No schedule generated yet.");
+            ErrorHandler.getInstance().logError("Hata, Henüz bir program oluşturulmadı. Dışa aktarmadan önce programı oluşturun.");
             showAlert("Hata", "Henüz bir program oluşturulmadı. Dışa aktarmadan önce programı oluşturun.");
             return;
         }
@@ -415,7 +419,7 @@ public class MainViewController implements Initializable {
             if (Desktop.isDesktopSupported() && manualFile.exists()) {
                 Desktop.getDesktop().open(manualFile);
             } else {
-                System.out.println("Manual file not found or Desktop not supported.");
+                ErrorHandler.getInstance().logError("Hata, Kullanım kılavuzu bulunamadı.");
                 showAlert("Hata", "Kullanım kılavuzu bulunamadı (UserManual.pdf).");
             }
         } catch (IOException e) {

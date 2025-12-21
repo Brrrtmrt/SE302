@@ -41,8 +41,6 @@ public class ErrorHandler {
         this.errorMessages.add(message);
         this.errorCount++;
 
-        // 2. Konsola yaz (Debugging için)
-        System.err.println("[ErrorHandler] " + message);
 
         // 3. Eğer arayüz dinliyorsa (Listener varsa), ona haber ver
         if (onErrorCallback != null) {
