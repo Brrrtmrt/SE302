@@ -52,6 +52,95 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/modules</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-manual</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/modules</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/docs</directory>
+                                    <includes>
+                                        <include>UserManual.pdf</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.1</version>
+                <executions>
+                    <execution>
+                        <id>create-installer</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>${java.home}/bin/jpackage</executable>
+                            <arguments>
+                                <argument>--type</argument>
+                                <argument>exe</argument>
+
+                                <argument>--input</argument>
+                                <argument>${project.build.directory}/modules</argument>
+
+                                <argument>--module-path</argument>
+                                <argument>
+                                    ${project.build.directory}/modules;${project.build.directory}/${project.build.finalName}.jar
+                                </argument>
+
+                                <argument>--module</argument>
+                                <argument>com.example.se/GUI.Main</argument>
+
+                                <argument>--dest</argument>
+                                <argument>${project.build.directory}/installer</argument>
+
+                                <argument>--name</argument>
+                                <argument>SE302_Scheduler</argument>
+
+                                <argument>--app-version</argument>
+                                <argument>1.0.0</argument>
+
+                                <argument>--win-shortcut</argument>
+                                <argument>--win-menu</argument>
+                                <argument>--win-dir-chooser</argument>
+
+                                <argument>--verbose</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
@@ -60,7 +149,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>com.example.se302/GUI.Main</mainClass>
+                            <mainClass>com.example.se/GUI.Main</mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>

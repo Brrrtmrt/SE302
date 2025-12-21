@@ -4,7 +4,7 @@
     -fx-background-color: #2b2b2b;  /* Main background */
     -fx-control-inner-background: #3c3f41; /* Inputs/Lists background */
     -fx-text-fill: white;           /* Default text color */
-    -fx-focus-color: #0096C9;       /* Blue outline when clicked */
+    -fx-focus-color: #010147;       /* Blue outline when clicked */
     -fx-faint-focus-color: #0096C922;
 }
 
@@ -43,7 +43,7 @@
 
 /* The color when you select an item */
 .list-cell:filled:selected:focused, .list-cell:filled:selected {
-    -fx-background-color: #0096C9; /* Bright Blue */
+    -fx-background-color: #010147; /* Bright Blue */
     -fx-text-fill: white;
 }
 
