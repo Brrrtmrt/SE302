@@ -212,7 +212,7 @@ public class MainViewController implements Initializable {
             return;
         }
 
-        // UPDATE UI VERY IMPRTANT
+        // UPDATE UI VERY IMPORTANT
         if (!timeSlots.isEmpty()) {
             LocalDate lastDate = timeSlots.get(timeSlots.size() - 1).getDate();
             long actualDaysLong = ChronoUnit.DAYS.between(startDate, lastDate) + 1;
@@ -391,5 +391,20 @@ public class MainViewController implements Initializable {
                 setGraphic(hbox);
             }
         }
+    }
+
+    private void showErrorAlert (String title, String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+
+        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+
+        if (isDarkModeOn) {
+            alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/dark.css").toExternalForm());
+        }
+
+        alert.showAndWait();
     }
 }
