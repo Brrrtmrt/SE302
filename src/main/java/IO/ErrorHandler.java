@@ -1,23 +1,24 @@
 package IO;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.function.Consumer; // Listener için gerekli import
 
 public class ErrorHandler {
 
     private static ErrorHandler instance;
-
-    // Requirements: Hold error count and error messages
     private ArrayList<String> errorMessages;
     private int errorCount;
 
-    // Private constructor for Singleton
+    // Arayüzü güncellemek için kullanılacak fonksiyon (Callback/Listener)
+    private Consumer<String> onErrorCallback;
+
+    // Private constructor (Singleton için)
     private ErrorHandler() {
         this.errorMessages = new ArrayList<>();
         this.errorCount = 0;
     }
 
-    // Global access point
+    // Global erişim noktası
     public static ErrorHandler getInstance() {
         if (instance == null) {
             instance = new ErrorHandler();
@@ -25,43 +26,40 @@ public class ErrorHandler {
         return instance;
     }
 
-    /**
-     * Logs an error message and increments the error count.
-     * @param message The error description
-     */
-    public void logError(String message) {
-        this.errorMessages.add(message);
-        this.errorCount++;
-        // Optional: Print to console immediately so you don't lose track during debugging
-        System.err.println("[ErrorHandler] " + message);
+    // Controller'dan buraya abone olmak için kullanılacak metod
+    // MainViewController burayı çağırarak "Hata olunca bana haber ver" der.
+    public void setOnErrorListener(Consumer<String> callback) {
+        this.onErrorCallback = callback;
     }
 
     /**
-     * @return The total number of errors recorded.
+     * Hatayı kaydeder ve arayüze haber verir.
+     * @param message Hata mesajı
      */
+    public void logError(String message) {
+        // 1. Hatayı listeye ekle
+        this.errorMessages.add(message);
+        this.errorCount++;
+
+        // 2. Konsola yaz (Debugging için)
+        System.err.println("[ErrorHandler] " + message);
+
+        // 3. Eğer arayüz dinliyorsa (Listener varsa), ona haber ver
+        if (onErrorCallback != null) {
+            onErrorCallback.accept(message);
+        }
+    }
+
     public int getErrorCount() {
         return this.errorCount;
     }
 
-    /**
-     * @return The list of error messages.
-     */
     public ArrayList<String> getErrorMessages() {
         return this.errorMessages;
     }
 
-    /**
-     * Clears all errors (useful before starting a new validation process).
-     */
     public void clear() {
         this.errorMessages.clear();
         this.errorCount = 0;
-    }
-
-    /**
-     * @return True if there are any errors, false otherwise.
-     */
-    public boolean hasErrors() {
-        return errorCount > 0;
     }
 }
