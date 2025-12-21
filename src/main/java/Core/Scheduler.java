@@ -31,6 +31,9 @@ import static Tests.Debug.*;
  */
 public class Scheduler {
 
+
+        private long startTimeInMillis;
+        private final long TIMEOUT_DURATION = 10000; // 10 seconds
         private static final Random random = new Random();
 
         /**
@@ -216,6 +219,7 @@ public class Scheduler {
          */
         public void generate_schedule(int initialDays, LocalDate startDate, boolean skip_weekend) {
 
+                this.startTimeInMillis = System.currentTimeMillis();
                 // 1. Sort Courses (Hardest first)
                 this.courses.sort((c1, c2) -> {
                         int deg1 = mp.getOrDefault(c1, new ArrayList<>()).size();
@@ -289,6 +293,10 @@ public class Scheduler {
                                                 days++;
                                                 currentDayRetries = 0;
                                         }
+                                } else if (e.getMessage().equals("TIMEOUT")) {
+                                        System.err.println("Scheduling stopped: Time limit exceeded.");
+                                        IO.ErrorHandler.getInstance().logError("Zaman aşımı: Uygun bir program 10 saniyede üretilemedi.");
+                                        return; // Stop execution
                                 } else {
                                         throw e;
                                 }
@@ -307,6 +315,10 @@ public class Scheduler {
          * @return true if remaining courses were successfully scheduled, false otherwise
          */
         boolean solver(int courseIndex) {
+
+                if (System.currentTimeMillis() - this.startTimeInMillis > TIMEOUT_DURATION) {
+                        throw new RuntimeException("TIMEOUT");
+                }
 
                 if (randomLevel() >= THROW_THRESHOLD) {
                         throw new RuntimeException("RANDOM_RESTART");
