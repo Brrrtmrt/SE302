@@ -9,6 +9,7 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
@@ -29,7 +30,7 @@
                 </Menu>
                 <Menu mnemonicParsing="false" text="Daha Fazla">
                     <items>
-                  <MenuItem mnemonicParsing="false" onAction="#handleManuel" text="Manuel" />
+                        <MenuItem mnemonicParsing="false" onAction="#handleManuel" text="Manuel" />
                         <CheckMenuItem mnemonicParsing="false" onAction="#handleDarkMode" text="Karanlık Mod" />
                     </items>
                 </Menu>
@@ -57,17 +58,21 @@
 
             <Label style="-fx-font-weight: bold;" text="Toplam Gün" />
             <Spinner fx:id="daysSpinner" editable="true" maxWidth="Infinity" />
-         <HBox prefHeight="100.0" prefWidth="200.0">
-            <children>
-               <DatePicker fx:id="startDatePicker" prefHeight="25.0" prefWidth="158.0" />
-               <Label alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="80.0" text="Başlangıç Tarihi">
-                  <font>
-                     <Font name="Cambria Bold" size="10.0" />
-                  </font>
-               </Label>
-            </children>
-         </HBox>
 
+            <HBox prefHeight="100.0" prefWidth="200.0">
+                <children>
+                    <DatePicker fx:id="startDatePicker" prefHeight="25.0" prefWidth="158.0" />
+                    <Label alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="80.0" text="Başlangıç Tarihi">
+                        <font>
+                            <Font name="Cambria Bold" size="10.0" />
+                        </font>
+                    </Label>
+                </children>
+            </HBox>
+
+            <Label style="-fx-font-weight: bold;" text="Öğrenci Programı Ara" />
+            <TextField fx:id="studentIdField" promptText="Öğrenci No Giriniz" />
+            <Button maxWidth="Infinity" onAction="#handleSearchStudent" text="Sınavları Bul" />
             <Button maxWidth="Infinity" onAction="#handleCreateSchedule" style="-fx-base: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" text="Optimal Tabloyu Oluştur" />
 
         </VBox>
