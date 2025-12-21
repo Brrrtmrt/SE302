@@ -30,7 +30,7 @@ public class Importer {
                                 }
                         }
                 } catch (IOException e) {
-                        System.out.println("Error reading ClassRooms file: " + e.getMessage());
+                        ErrorHandler.getInstance().logError("Sınıflar dosyasını içe aktarırken okuma hatası.\n" + e.getMessage());
                 }
                 return classRooms;
         }
@@ -52,8 +52,7 @@ public class Importer {
                                 }
                         }
                 } catch (IOException e) {
-                        System.out.println("Error reading Students file: " + e.getMessage());
-
+                        ErrorHandler.getInstance().logError("Öğrenciler dosyasını içe aktarırken okuma hatası.\n" + e.getMessage());
                 }
                 return students;
         }
@@ -78,8 +77,7 @@ public class Importer {
                                 }
 
                         } catch (IOException e) {
-                                System.out.println("Error reading Students file: " + e.getMessage());
-
+                                ErrorHandler.getInstance().logError("Dersler dosyasını içe aktarırken okuma hatası.\n" + e.getMessage());
                         }
                         return courses;
 
@@ -106,8 +104,7 @@ public class Importer {
 
 
                                 } catch (IOException e) {
-                                        System.out.println("Error reading Students file: " + e.getMessage());
-
+                                        ErrorHandler.getInstance().logError("Dersler dosyasını içe aktarırken okuma hatası.\n" + e.getMessage());
                                 }
 
 
@@ -166,8 +163,7 @@ public class Importer {
                         }
 
                 } catch (IOException e) {
-                        System.out.println("Error reading Attendance file: " + e.getMessage());
-
+                        ErrorHandler.getInstance().logError("Katılım dosyasını içe aktarırken okuma hatası.\n" + e.getMessage());
                 }
                 return courses;
         }
@@ -186,7 +182,7 @@ public class Importer {
                                 }
                         }
                 } catch (IOException e) {
-                        System.err.println("Error detecting separator: " + e.getMessage());
+                        ErrorHandler.getInstance().logError("Dosyayı içe aktarırken ayırıcı belirlenemedi.\n" + e.getMessage());
                 }
                 return ","; // Default fallback
         }
