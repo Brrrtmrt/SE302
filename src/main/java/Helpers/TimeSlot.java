@@ -49,31 +49,6 @@ public class TimeSlot {
                 return m_id;
         }
 
-        /**
-         * Public API enter slots here
-         * TODO 1:Get input then create time slots
-         *
-         * @return slots that will be used in scheduler
-         *
-         */
-       /* public static ArrayList<LocalTime> set_time_slots() {
-
-                return new ArrayList<LocalTime>(List.of(
-                        LocalTime.of(8, 30),
-                        LocalTime.of(9,25),
-                        LocalTime.of(10, 20),
-                        LocalTime.of(11, 15),
-                        LocalTime.of(12, 10),
-                        LocalTime.of(13, 5),
-                        LocalTime.of(14, 0),
-                        LocalTime.of(14, 55),
-                        LocalTime.of(15, 50),
-                        LocalTime.of(16, 45),
-                        LocalTime.of(17, 40),
-                        LocalTime.of(18, 35),
-                        LocalTime.of(19, 30)
-                ));
-        }*/
         public static ArrayList<LocalTime> set_time_slots() {
                 if (step_size_t <= 0) {
                         throw new IllegalArgumentException("step_size_t must be > 0");
@@ -115,13 +90,5 @@ public class TimeSlot {
                         days_added++;
                 }
                 return all_slots;
-        }
-
-        public static void main(String[] args) {
-                final ArrayList<LocalTime> time_slots = set_time_slots();
-                final ArrayList<TimeSlot> slots = slot_generator(2, LocalDate.now().plusDays(5), time_slots, true); //  Oki doki skip_weekend seems fine
-                for (final var x : slots) {
-                        System.out.println(x);
-                }
         }
 }
