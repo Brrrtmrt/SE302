@@ -23,7 +23,7 @@ public class Exporter {
         try (BufferedWriter writer = Files.newBufferedWriter(filePath)) {
 
             // HEADER
-            writer.write("ExamName,CourseID,ClassRoom,Date,StartTime,EndTime,Students");
+            writer.write("ExamName;CourseID;ClassRoom;Date;StartTime;EndTime;Students");
 
             writer.newLine();
 
@@ -44,15 +44,15 @@ public class Exporter {
 
                 // Students
                 Set<String> students = course.getEnrolledStudentIDs();
-                String studentStr = String.join("|", students);
+                String studentStr = String.join(";", students);
 
                 writer.write(
-                        examName + "," +
-                                course.getID() + "," +
-                                room.getName() + "," +
-                                date + "," +
-                                startTime + "," +
-                                endTime + "," +
+                        examName + ";" +
+                                course.getID() + ";" +
+                                room.getName() + ";" +
+                                date + ";" +
+                                startTime + ";" +
+                                endTime + ";" +
                                 studentStr
                 );
 
