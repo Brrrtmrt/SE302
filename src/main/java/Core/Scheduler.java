@@ -263,13 +263,6 @@ public class Scheduler {
                                 continue;
                         }
 
-                        if (days > initialDays + 30) {
-                                throw new SchedulingException("Schedule unfeasible", "The algorithm could not find a valid solution within a reasonable time.\n" +
-                                        "This usually happens due to:\n" +
-                                        "1. Too many conflicts for the available rooms.\n" +
-                                        "2. Exams duration exceeding day limits.");
-                        }
-
                         try {
                                 if (solver(0)) {
                                         solved = true;
