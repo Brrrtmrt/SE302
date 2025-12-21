@@ -63,7 +63,7 @@ public class Exporter {
             System.out.println("CSV export completed: " + filePath);
 
         } catch (IOException e) {
-            System.out.println("Export failed: " + e.getMessage());
+            ErrorHandler.getInstance().logError("Dosyanın dışa aktarımı başarısız.");
         }
     }
 }

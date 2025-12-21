@@ -46,7 +46,7 @@ public class DataGenerator {
                                 writer.write(roomId + ";" + capacity + "\n");
                         }
                 } catch (IOException e) {
-                        e.printStackTrace();
+                        ErrorHandler.getInstance().logError("Sınıfları oluştururken hata.");
                 }
         }
 
@@ -62,7 +62,7 @@ public class DataGenerator {
                                 writer.write(courseId + "," + duration + "\n");
                         }
                 } catch (IOException e) {
-                        System.err.println(e.getMessage());
+                        ErrorHandler.getInstance().logError("Dersleri oluştururken hata.");
                 }
         }
 
@@ -75,7 +75,7 @@ public class DataGenerator {
                                 writer.write(stdId + "\n");
                         }
                 } catch (IOException e) {
-                        System.err.println(e.getMessage());
+                        ErrorHandler.getInstance().logError("Öğrencileri oluştururken hata");
                 }
         }
 
@@ -109,6 +109,7 @@ public class DataGenerator {
                                 writer.write(joiner.toString() + "\n");
                         }
                 } catch (IOException e) {
+                        ErrorHandler.getInstance().logError("Katılımı oluştururken hata.");
                         System.err.println(e.getMessage());
                 }
         }

@@ -5,13 +5,18 @@ import Core.Course;
 import Core.Student;
 import IO.Exporter;
 import IO.Importer;
+import IO.ErrorHandler; // Hata yakalayıcı sınıfımız
+
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField; // Added Import
+import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -37,11 +42,17 @@ public class MainViewController implements Initializable {
     @FXML private ListView<String> classroomList;
     @FXML private ListView<String> attendanceList;
 
+    // --- HATA LOG BUTONU ---
+    @FXML private Button errorLogButton;
+
     // --- DATA STORAGE ---
     private ArrayList<Student> allStudents = new ArrayList<>();
     private ArrayList<Course> allCourses = new ArrayList<>();
     private ArrayList<ClassRoom> allClassrooms = new ArrayList<>();
     private ArrayList<Course> allAttendance = new ArrayList<>();
+
+    // Hataları hafızada tutacağımız liste (Observer Pattern için)
+    private ObservableList<String> errorLogItems = FXCollections.observableArrayList();
 
     // --- STATE & VIEWS ---
     private boolean isDarkModeOn = false;
@@ -51,7 +62,7 @@ public class MainViewController implements Initializable {
     private HashMap<Course, Integer> finalSchedule = new HashMap<>();
     private HashMap<Integer, String[]> finalSlotMap = new HashMap<>();
     private HashMap<Course, ClassRoom> finalRoomMap = new HashMap<>();
-    
+
     // NEW: Store time slots for search functionality
     private ArrayList<Helpers.TimeSlot> generatedTimeSlots;
 
@@ -59,7 +70,7 @@ public class MainViewController implements Initializable {
     @FXML private Spinner<Integer> intervalSpinner;
     @FXML private Spinner<Integer> daysSpinner;
     @FXML private DatePicker startDatePicker;
-    
+
     // NEW: Search Field
     @FXML private TextField studentIdField;
 
@@ -105,6 +116,58 @@ public class MainViewController implements Initializable {
         // 6. Layout Setup
         mainContainer.setCenter(scheduleView);
         mainContainer.getStylesheets().add(getClass().getResource("/css/light.css").toExternalForm());
+
+        // 7. Error Handler Kurulumu
+        setupErrorHandler();
+    }
+
+    private void setupErrorHandler() {
+        // Başlangıç metni
+        if(errorLogButton != null) {
+            errorLogButton.setText("Hata000");
+        }
+
+        // ErrorHandler dinleyicisi
+        IO.ErrorHandler.getInstance().setOnErrorListener(errorMessage -> {
+            Platform.runLater(() -> {
+                // 1. Hatayı hafızadaki listeye ekle
+                errorLogItems.add(errorMessage);
+
+                // 2. Buton üzerindeki sayıyı güncelle (Max 999)
+                int count = IO.ErrorHandler.getInstance().getErrorCount();
+                if (count > 999) count = 999;
+
+                if (errorLogButton != null) {
+                    errorLogButton.setText(String.format("Hata%03d", count));
+                }
+            });
+        });
+    }
+
+    @FXML
+    void handleShowErrorLog(ActionEvent event) {
+        // Eğer hiç hata yoksa bilgi ver
+        if (errorLogItems.isEmpty()) {
+                showAlert("Bilgi", "Şu ana kadar herhangi bir hata kaydı oluşmadı.");
+                return;
+        }
+
+        // Özel bir Alert (Dialog) oluşturuyoruz
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Hata Kayıtları");
+        alert.setHeaderText("Toplam Hata Sayısı: " + IO.ErrorHandler.getInstance().getErrorCount());
+        alert.setContentText("Hata detayları aşağıdadır:");
+
+        // Alert içine gömmek için bir ListView oluşturuyoruz
+        ListView<String> listView = new ListView<>(errorLogItems);
+        listView.setPrefWidth(500);
+        listView.setPrefHeight(300);
+
+        // ListView'i Alert penceresinin "genişletilebilir" alanına koyuyoruz
+        alert.getDialogPane().setExpandableContent(listView);
+        alert.getDialogPane().setExpanded(true); // Otomatik açık gelsin
+
+        alert.showAndWait();
     }
 
     @FXML
@@ -163,7 +226,9 @@ public class MainViewController implements Initializable {
     @FXML
     void handleCreateSchedule(ActionEvent event) {
         if (allCourses.isEmpty() || allClassrooms.isEmpty()) {
-            System.out.println("Error: Please import Courses and Classrooms first!");
+            // Kullanıcıya da görsel hata verilebilir
+            ErrorHandler.getInstance().logError("Eksik Veri, Lütfen önce Dersleri ve Sınıfları içe aktarın.");
+            showAlert("Eksik Veri", "Lütfen önce Dersleri ve Sınıfları içe aktarın.");
             return;
         }
 
@@ -204,11 +269,12 @@ public class MainViewController implements Initializable {
         ArrayList<Helpers.TimeSlot> timeSlots = scheduler.getActiveTimeSlots();
         HashMap<Course, ClassRoom> calculatedRooms = scheduler.getRoomAssignments();
 
-        // *** CRITICAL UPDATE: SAVE TIME SLOTS FOR SEARCH ***
+        // * CRITICAL UPDATE: SAVE TIME SLOTS FOR SEARCH *
         this.generatedTimeSlots = timeSlots;
 
         if (calculatedSchedule == null || calculatedSchedule.isEmpty()) {
-            System.out.println("No schedule found.");
+            ErrorHandler.getInstance().logError("Program oluşturulamadı, Verilen kısıtlarla uygun bir program bulunamadı.");
+            showAlert("Program Oluşturulamadı", "Verilen kısıtlarla uygun bir program bulunamadı.");
             return;
         }
 
@@ -290,12 +356,14 @@ public class MainViewController implements Initializable {
         String studentID = studentIdField.getText().trim();
 
         if (studentID.isEmpty()) {
-            showAlert("Error", "Please enter a Student ID.");
+            ErrorHandler.getInstance().logError("Hata, Lütfen önce öğrenci numarası girin.");
+            showAlert("Hata", "Lütfen önce öğrenci numarası girin.");
             return;
         }
 
         if (finalSchedule == null || finalSchedule.isEmpty() || generatedTimeSlots == null) {
-            showAlert("Error", "Lütfen önce tabloyu oluşturun.");
+            ErrorHandler.getInstance().logError("Hata, Lütfen önce tabloyu oluşturun.");
+            showAlert("Hata", "Lütfen önce tabloyu oluşturun.");
             return;
         }
 
@@ -303,6 +371,7 @@ public class MainViewController implements Initializable {
         java.util.List<String> exams = extractor.getExamsForStudent(studentID);
 
         if (exams.isEmpty()) {
+            ErrorHandler.getInstance().logError("Hata, Öğrenci için sınav bulunamadı." + studentID);
             showAlert("Hata", "Öğrenci için sınav bulunamadı: " + studentID);
         } else {
             StringBuilder sb = new StringBuilder("Öğrenci için sınav programı " + studentID + ":\n\n");
@@ -316,7 +385,8 @@ public class MainViewController implements Initializable {
     @FXML
     void exportTimetable(ActionEvent event) {
         if (finalSchedule.isEmpty()) {
-            System.out.println("Error: No schedule generated yet.");
+            ErrorHandler.getInstance().logError("Hata, Henüz bir program oluşturulmadı. Dışa aktarmadan önce programı oluşturun.");
+            showAlert("Hata", "Henüz bir program oluşturulmadı. Dışa aktarmadan önce programı oluşturun.");
             return;
         }
 
@@ -349,7 +419,8 @@ public class MainViewController implements Initializable {
             if (Desktop.isDesktopSupported() && manualFile.exists()) {
                 Desktop.getDesktop().open(manualFile);
             } else {
-                System.out.println("Manual file not found or Desktop not supported.");
+                ErrorHandler.getInstance().logError("Hata, Kullanım kılavuzu bulunamadı.");
+                showAlert("Hata", "Kullanım kılavuzu bulunamadı (UserManual.pdf).");
             }
         } catch (IOException e) {
             System.out.println("Error opening manual: " + e.getMessage());
