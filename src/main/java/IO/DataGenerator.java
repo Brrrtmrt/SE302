@@ -21,7 +21,7 @@ public class DataGenerator {
 
         private static final Random random = new Random();
 
-        public static void main(String[] args) {
+        /*public static void main(String[] args) {
                 System.out.println("Generating larger dataset with specific structure...");
 
                 generateClassrooms();
@@ -35,7 +35,7 @@ public class DataGenerator {
                 System.out.println(" - " + FILE_STUDENTS);
                 System.out.println(" - " + FILE_ATTENDANCE);
         }
-
+        */
         private static void generateClassrooms() {
                 try (FileWriter writer = new FileWriter(FILE_CLASSROOMS)) {
                         writer.write("ALL OF THE CLASSROOMS; AND THEIR CAPACITIES IN THE SYSTEM\n");
@@ -84,7 +84,6 @@ public class DataGenerator {
                 // CourseCode_01
                 // ['Std_ID_xxx', 'Std_ID_yyy']
                 try (FileWriter writer = new FileWriter(FILE_ATTENDANCE)) {
-
 
 
                         for (int i = 1; i <= NUM_COURSES; i++) {

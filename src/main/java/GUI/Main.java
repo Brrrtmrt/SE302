@@ -4,32 +4,33 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 
 public class Main extends Application {
-    @Override
-    public void start(Stage primaryStage) throws Exception {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("MainView.fxml"));  //importing fxml file
-            Parent root = loader.load();
+        @Override
+        public void start(Stage primaryStage) throws Exception {
+                try {
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource("MainView.fxml"));  //importing fxml file
+                        Parent root = loader.load();
 
 
-            Scene scene = new Scene(root); //this will be probably our only scene
+                        Scene scene = new Scene(root); //this will be probably our only scene
 
-            // 3. Configure and Show the Stage
-            primaryStage.setTitle("CalendarBuilder");
-            primaryStage.setScene(scene);
-            primaryStage.show();
+                        // 3. Configure and Show the Stage
+                        primaryStage.setTitle("CalendarBuilder");
+                        primaryStage.setScene(scene);
+                        primaryStage.show();
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Error loading FXML file. Check the file path.");
+                } catch (IOException e) {
+                        System.err.println(e.getMessage());
+                        System.err.println("Error loading FXML file. Check the file path.");
+                }
         }
-    }
 
-    public static void main(String[] args) {
-        launch(args);
-    }
+        public static void main(String[] args) {
+                launch(args);
+        }
 }

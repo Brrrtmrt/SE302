@@ -26,7 +26,6 @@ public class Importer {
                                         int capacity = Integer.parseInt(parts[1].trim());
                                         ClassRoom classRoom = new ClassRoom(name, capacity);
                                         classRooms.add(classRoom);
-                                        System.out.println("Imported ClassRoom: " + classRoom.getName() + " with capacity " + classRoom.getCapacity());
                                 }
                         }
                 } catch (Exception e) {
@@ -47,7 +46,6 @@ public class Importer {
 
 
                                         Student student = new Student(line);
-                                        System.out.println("Imported Student with ID: " + student.ID());
                                         students.add(student);
                                 }
                         }
@@ -70,7 +68,6 @@ public class Importer {
 
 
                                                 Course course = new Course(line, 90);
-                                                System.out.println("Imported Course with ID: " + course.getID() + " with default duration 90");
                                                 courses.add(course);
 
                                         }
@@ -97,7 +94,6 @@ public class Importer {
                                                         int duration = parts[1].trim().isEmpty() ? 90 : Integer.parseInt(parts[1].trim());
                                                         Course course = new Course(id, duration);
                                                         courses.add(course);
-                                                        System.out.println("Imported Course: " + course.getID() + " with duration " + course.getDuration());
                                                 }
 
                                         }
@@ -135,7 +131,6 @@ public class Importer {
                                 if (isStudentList) {
                                         // --- Process Student List ---
                                         if (currentCourseID == null) {
-                                                System.out.println("Skipping orphan student list (no course ID found): " + line);
                                                 continue;
                                         }
 
@@ -151,8 +146,6 @@ public class Importer {
                                                         course.addEnrolledStudentID(id.trim());
                                                 }
                                         }
-
-                                        System.out.println("Imported Attendance List for: " + course.getID() + " with Students: " + course.getEnrolledStudentIDs());
                                         courses.add(course);
                                 } else {
                                         // --- Process Course ID ---
@@ -186,26 +179,4 @@ public class Importer {
                 }
                 return ","; // Default fallback
         }
-
-        public static void main(String[] args) {
-
-                ArrayList<Course> courses2 = importCourses(Path.of("docs\\sampleData_AllCoursesWithTime.csv"));
-                for (Course course : courses2) {
-                        System.out.println("Course ID: " + course.getID() + ", Duration: " + course.getDuration());
-                }
-                ArrayList<Student> students2 = importStudents(Path.of("docs\\sampleData_AllStudents.csv"));
-                for (Student student : students2) {
-                        System.out.println("Student ID: " + student.ID());
-                }
-                ArrayList<ClassRoom> classRooms2 = importClassRooms(Path.of("docs\\sampleData_AllClassroomsAndTheirCapacities.csv"));
-                for (ClassRoom classRoom : classRooms2) {
-                        System.out.println("ClassRoom Name: " + classRoom.getName() + ", Capacity: " + classRoom.getCapacity());
-                }
-                ArrayList<Course> courses3 = importAttandenceLists(Path.of("docs\\sampleData_AllAttendanceLists.csv"));
-                for (Course course : courses3) {
-                        System.out.println("Course ID: " + course.getID() + ", Enrolled Students: " + course.getEnrolledStudentIDs());
-                }
-        }
-
-
 }
