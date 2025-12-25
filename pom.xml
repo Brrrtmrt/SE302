@@ -110,6 +110,10 @@
                                 <argument>--type</argument>
                                 <argument>exe</argument>
 
+                                <argument>--add-modules</argument>
+                                <argument>jdk.localedata</argument>
+
+
                                 <argument>--input</argument>
                                 <argument>${project.build.directory}/modules</argument>
 
